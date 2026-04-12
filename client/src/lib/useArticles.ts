@@ -44,5 +44,12 @@ export function useArticles() {
     }
   }
 
-  return { articles, loading, error, reload: loadArticles };
+  /**
+   * Force refresh all articles (clear cache)
+   */
+  async function refreshArticles() {
+    await loadArticles();
+  }
+
+  return { articles, loading, error, reload: loadArticles, refresh: refreshArticles };
 }

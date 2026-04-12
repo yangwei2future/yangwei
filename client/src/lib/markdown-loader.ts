@@ -23,8 +23,17 @@ export async function fetchMarkdownFromGitHub(url: string): Promise<Article> {
     // Convert GitHub URL to raw URL if needed
     const rawUrl = convertToRawUrl(url);
 
+    // In development, use Vite proxy to avoid CORS
+    // In production (Vercel), direct fetch works fine
+    const isDev = import.meta.env.DEV;
+    const fetchUrl = isDev
+      ? `/api/github-raw/${rawUrl.replace("https://raw.githubusercontent.com/", "")}`
+      : rawUrl;
+
+    console.log("Fetching from:", fetchUrl);
+
     // Fetch content
-    const response = await fetch(rawUrl);
+    const response = await fetch(fetchUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch: ${response.status}`);
     }

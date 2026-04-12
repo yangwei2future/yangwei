@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lock, LogOut } from "lucide-react";
+import { Lock, LogOut, RefreshCw } from "lucide-react";
 import {
   verifyPassword,
   isAuthenticated,
@@ -32,6 +32,7 @@ export default function Admin() {
   const [newUrl, setNewUrl] = useState("");
   const [links, setLinks] = useState(getArticleLinks());
   const [success, setSuccess] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,6 +83,17 @@ export default function Admin() {
     const updatedLinks = removeArticleLink(url);
     setLinks(updatedLinks);
     setSuccess("文章链接已删除");
+  };
+
+  const handleRefreshArticles = () => {
+    setRefreshing(true);
+    setSuccess("已清除缓存，下次加载文章时会从 GitHub 拉取最新内容");
+
+    // Clear article cache by triggering a page reload
+    setTimeout(() => {
+      setRefreshing(false);
+      window.location.href = "/articles";
+    }, 1000);
   };
 
   function isValidGitHubUrl(url: string): boolean {
@@ -135,10 +147,16 @@ export default function Admin() {
       <div className="container max-w-4xl py-12">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">文章链接管理</h1>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            退出
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleRefreshArticles} disabled={refreshing}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? '刷新中...' : '刷新文章'}
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              退出
+            </Button>
+          </div>
         </div>
 
         {/* Add new link */}
