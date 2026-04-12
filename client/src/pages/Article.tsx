@@ -1,12 +1,13 @@
 import { useParams, Link } from "wouter";
 import Navigation from "@/components/Navigation";
-import { getArticleById, getAllArticles } from "@/lib/articles";
-import { Streamdown } from "streamdown";
+import { useArticles } from "@/lib/useArticles";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { ArrowLeft } from "lucide-react";
 
 /**
  * Article Detail Page
- * 
+ *
  * Design: Modern Minimalism
  * - Centered reading area with optimal line length
  * - Markdown rendering with proper typography
@@ -15,8 +16,25 @@ import { ArrowLeft } from "lucide-react";
 
 export default function Article() {
   const { id } = useParams<{ id: string }>();
-  const article = id ? getArticleById(id) : null;
-  const allArticles = getAllArticles();
+  const { articles, loading, error } = useArticles();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">加载中...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-destructive">{error}</p>
+      </div>
+    );
+  }
+
+  const article = articles.find((a) => a.id === id);
 
   if (!article) {
     return (
@@ -33,7 +51,7 @@ export default function Article() {
   }
 
   // Get related articles (same tags)
-  const relatedArticles = allArticles
+  const relatedArticles = articles
     .filter(
       (a) =>
         a.id !== article.id &&
@@ -89,9 +107,11 @@ export default function Article() {
       {/* Article Content */}
       <section className="py-12">
         <div className="container max-w-2xl">
-          <div className="prose prose-sm max-w-none">
-            <Streamdown>{article.content}</Streamdown>
-          </div>
+          <article className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-code:text-primary prose-pre:bg-accent">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              {article.content}
+            </ReactMarkdown>
+          </article>
         </div>
       </section>
 

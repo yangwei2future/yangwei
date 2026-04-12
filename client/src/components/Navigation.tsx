@@ -3,7 +3,7 @@ import SearchBar from "./SearchBar";
 
 /**
  * Navigation Component
- * 
+ *
  * Design: Modern Minimalism
  * - Minimal header with clean typography
  * - Simple navigation links with subtle hover effects
@@ -32,6 +32,9 @@ export default function Navigation() {
           </Link>
           <Link href="/about" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             关于
+          </Link>
+          <Link href="/admin" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+            管理
           </Link>
         </div>
       </div>

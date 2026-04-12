@@ -1,12 +1,12 @@
 import { Link } from "wouter";
 import Navigation from "@/components/Navigation";
 import ArticleCard from "@/components/ArticleCard";
-import { getAllArticles } from "@/lib/articles";
+import { useArticles } from "@/lib/useArticles";
 import { Mail, Github, Linkedin } from "lucide-react";
 
 /**
  * Home Page
- * 
+ *
  * Design: Modern Minimalism
  * - Clean hero section with personal introduction
  * - Recent articles showcase
@@ -14,7 +14,8 @@ import { Mail, Github, Linkedin } from "lucide-react";
  */
 
 export default function Home() {
-  const articles = getAllArticles().slice(0, 6);
+  const { articles, loading } = useArticles();
+  const recentArticles = articles.slice(0, 6);
 
   return (
     <div className="min-h-screen bg-background">
@@ -77,16 +78,22 @@ export default function Home() {
 
           {/* Articles Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-            {articles.map((article) => (
-              <ArticleCard
-                key={article.id}
-                id={article.id}
-                title={article.title}
-                excerpt={article.excerpt}
-                date={article.date}
-                tags={article.tags}
-              />
-            ))}
+            {loading ? (
+              <p className="text-muted-foreground">加载中...</p>
+            ) : recentArticles.length > 0 ? (
+              recentArticles.map((article) => (
+                <ArticleCard
+                  key={article.id}
+                  id={article.id}
+                  title={article.title}
+                  excerpt={article.excerpt}
+                  date={article.date}
+                  tags={article.tags}
+                />
+              ))
+            ) : (
+              <p className="text-muted-foreground">暂无文章</p>
+            )}
           </div>
 
           {/* View All Articles Link */}

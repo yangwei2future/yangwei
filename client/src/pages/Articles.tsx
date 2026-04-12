@@ -1,11 +1,11 @@
 import { useState, useMemo } from "react";
 import Navigation from "@/components/Navigation";
 import ArticleCard from "@/components/ArticleCard";
-import { getAllArticles } from "@/lib/articles";
+import { useArticles } from "@/lib/useArticles";
 
 /**
  * Articles Page
- * 
+ *
  * Design: Modern Minimalism
  * - Clean list of all articles
  * - Tag filtering functionality
@@ -13,23 +13,39 @@ import { getAllArticles } from "@/lib/articles";
  */
 
 export default function Articles() {
-  const allArticles = getAllArticles();
+  const { articles, loading, error } = useArticles();
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   // Extract unique tags
   const allTags = useMemo(() => {
     const tags = new Set<string>();
-    allArticles.forEach((article) => {
+    articles.forEach((article) => {
       article.tags.forEach((tag) => tags.add(tag));
     });
     return Array.from(tags).sort();
-  }, [allArticles]);
+  }, [articles]);
 
   // Filter articles by tag
   const filteredArticles = useMemo(() => {
-    if (!selectedTag) return allArticles;
-    return allArticles.filter((article) => article.tags.includes(selectedTag));
-  }, [allArticles, selectedTag]);
+    if (!selectedTag) return articles;
+    return articles.filter((article) => article.tags.includes(selectedTag));
+  }, [articles, selectedTag]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">加载中...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-destructive">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

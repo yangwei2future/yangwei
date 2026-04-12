@@ -2,14 +2,14 @@ import { useLocation } from "wouter";
 import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
 import ArticleCard from "@/components/ArticleCard";
-import { getAllArticles } from "@/lib/articles";
+import { useArticles } from "@/lib/useArticles";
 import type { Article } from "@/lib/types";
 import { searchArticles } from "@/lib/search";
 import { Search as SearchIcon } from "lucide-react";
 
 /**
  * Search Results Page
- * 
+ *
  * Design: Modern Minimalism
  * - Clean search interface
  * - Results displayed in familiar card format
@@ -18,25 +18,28 @@ import { Search as SearchIcon } from "lucide-react";
 
 export default function Search() {
   const [, setLocation] = useLocation();
+  const { articles, loading, error } = useArticles();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Article[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
 
   // Get query from URL search params
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const q = params.get("q") || "";
-    setQuery(q);
-    setHasSearched(true); // Always show results
+    if (!loading && articles.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get("q") || "";
+      setQuery(q);
+      setHasSearched(true); // Always show results
 
-    const searchResults = searchArticles(getAllArticles(), q);
-    setResults(searchResults);
-  }, []);
+      const searchResults = searchArticles(articles, q);
+      setResults(searchResults);
+    }
+  }, [loading, articles]);
 
   const handleSearch = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLocation(`/search?q=${encodeURIComponent(query)}`);
-    const searchResults = searchArticles(getAllArticles(), query);
+    const searchResults = searchArticles(articles, query);
     setResults(searchResults);
     setHasSearched(true);
   };
@@ -44,6 +47,22 @@ export default function Search() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">加载中...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-destructive">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

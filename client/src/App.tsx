@@ -9,6 +9,7 @@ import Articles from "./pages/Articles";
 import Article from "./pages/Article";
 import About from "./pages/About";
 import Search from "./pages/Search";
+import Admin from "./pages/Admin";
 
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/article/:id" component={Article} />
       <Route path="/about" component={About} />
       <Route path="/search" component={Search} />
+      <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
