@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import Navigation from "@/components/Navigation";
 import ArticleCard from "@/components/ArticleCard";
 import { useArticles } from "@/lib/useArticles";
+import { Loader2 } from "lucide-react";
 
 /**
  * Articles Page
@@ -33,8 +34,9 @@ export default function Articles() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-muted-foreground">加载中...</p>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">正在从 GitHub 加载文章...</p>
       </div>
     );
   }
@@ -124,7 +126,7 @@ export default function Articles() {
       <footer className="py-12 border-t border-border">
         <div className="container text-center">
           <p className="text-sm text-muted-foreground">
-            © 2024 个人博客. 保留所有权利。
+            © 2026 个人博客. 保留所有权利。
           </p>
         </div>
       </footer>

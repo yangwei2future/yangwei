@@ -2,7 +2,15 @@ import { Link } from "wouter";
 import Navigation from "@/components/Navigation";
 import ArticleCard from "@/components/ArticleCard";
 import { useArticles } from "@/lib/useArticles";
-import { Mail, Github, Linkedin } from "lucide-react";
+import { preloadArticles } from "@/lib/useArticles";
+import { Mail, Github, MessageCircle } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
 
 /**
  * Home Page
@@ -16,6 +24,13 @@ import { Mail, Github, Linkedin } from "lucide-react";
 export default function Home() {
   const { articles, loading } = useArticles();
   const recentArticles = articles.slice(0, 6);
+  const [wechatOpen, setWechatOpen] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(false);
+
+  // Preload articles when user visits Home page
+  useEffect(() => {
+    preloadArticles();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,19 +45,19 @@ export default function Home() {
                 欢迎来到我的博客
               </h1>
               <p className="mt-4 text-lg text-muted-foreground">
-                分享关于前端开发、技术思考和职业成长的文章。
+                分享关于后端开发、技术思考和职业成长的文章。
               </p>
             </div>
 
             {/* Social Links */}
             <div className="flex gap-4 pt-4">
-              <a
-                href="mailto:your-email@example.com"
+              <button
+                onClick={() => setEmailOpen(true)}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
               >
                 <Mail size={18} />
                 邮箱
-              </a>
+              </button>
               <a
                 href="https://github.com"
                 target="_blank"
@@ -52,19 +67,59 @@ export default function Home() {
                 <Github size={18} />
                 GitHub
               </a>
-              <a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => setWechatOpen(true)}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
               >
-                <Linkedin size={18} />
-                LinkedIn
-              </a>
+                <MessageCircle size={18} />
+                微信
+              </button>
             </div>
           </div>
         </div>
       </section>
+
+      {/* WeChat QR Dialog */}
+      <Dialog open={wechatOpen} onOpenChange={setWechatOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>微信二维码</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center py-6">
+            <img
+              src="/wechat-qr.png"
+              alt="微信二维码"
+              className="w-64 h-64 object-contain"
+            />
+            <p className="text-sm text-muted-foreground mt-4">
+              扫码添加微信
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Email Dialog */}
+      <Dialog open={emailOpen} onOpenChange={setEmailOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>邮箱地址</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center justify-center py-6">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText("ywei_20@126.com");
+                alert("邮箱已复制到剪贴板");
+              }}
+              className="text-2xl font-semibold text-foreground hover:text-primary transition-colors cursor-pointer"
+            >
+              ywei_20@126.com
+            </button>
+            <p className="text-sm text-muted-foreground mt-4">
+              点击复制邮箱地址
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Recent Articles Section */}
       <section className="py-20">
@@ -109,7 +164,7 @@ export default function Home() {
       <footer className="py-12 border-t border-border">
         <div className="container text-center">
           <p className="text-sm text-muted-foreground">
-            © 2024 个人博客. 保留所有权利。
+            © 2026 个人博客. 保留所有权利。
           </p>
         </div>
       </footer>

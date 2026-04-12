@@ -2,6 +2,8 @@ import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import fs from "node:fs";
+import http from "node:http";
+import https from "node:https";
 import path from "node:path";
 import { defineConfig, type Plugin, type ViteDevServer } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
@@ -66,6 +68,71 @@ function writeToLogFile(source: LogSource, entries: unknown[]) {
 
   // Trim if exceeds max size
   trimLogFile(logPath, MAX_LOG_SIZE_BYTES);
+}
+
+/**
+ * Vite plugin to fetch GitHub content via API (bypass CORS and proxy issues)
+ * Uses Node.js https module which works with system proxy
+ */
+function vitePluginGitHubProxy(): Plugin {
+  return {
+    name: "github-proxy",
+    configureServer(server: ViteDevServer) {
+      server.middlewares.use("/api/github-proxy", async (req, res, next) => {
+        if (req.method !== "GET") {
+          return next();
+        }
+
+        try {
+          // Extract URL from query parameter
+          const urlObj = new URL(req.url || "", `http://localhost:${server.config.server.port}`);
+          const targetUrl = urlObj.searchParams.get("url");
+
+          if (!targetUrl) {
+            res.writeHead(400, { "Content-Type": "text/plain" });
+            res.end("Missing 'url' parameter");
+            return;
+          }
+
+          console.log(`[GitHub Proxy] Fetching: ${targetUrl}`);
+
+          // Use Node.js https module (works with HTTP_PROXY env var)
+          https.get(
+            targetUrl,
+            {
+              headers: {
+                Accept: "application/vnd.github.v3.raw",
+                "User-Agent": "Mozilla/5.0",
+              },
+            },
+            (proxyRes) => {
+              if (proxyRes.statusCode !== 200) {
+                console.error(`[GitHub Proxy] Error: ${proxyRes.statusCode}`);
+                res.writeHead(proxyRes.statusCode || 500, { "Content-Type": "text/plain" });
+                proxyRes.pipe(res);
+                return;
+              }
+
+              console.log(`[GitHub Proxy] Success: 200`);
+              res.writeHead(200, {
+                "Content-Type": "text/plain; charset=utf-8",
+                "Access-Control-Allow-Origin": "*",
+              });
+              proxyRes.pipe(res);
+            }
+          ).on("error", (err) => {
+            console.error(`[GitHub Proxy] Network error:`, err.message);
+            res.writeHead(500, { "Content-Type": "text/plain" });
+            res.end(`Network error: ${err.message}`);
+          });
+        } catch (err) {
+          console.error(`[GitHub Proxy] Error:`, err);
+          res.writeHead(500, { "Content-Type": "text/plain" });
+          res.end("Internal server error");
+        }
+      });
+    },
+  };
 }
 
 /**
@@ -150,7 +217,14 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
-const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
+const plugins = [
+  react(),
+  tailwindcss(),
+  jsxLocPlugin(),
+  vitePluginManusRuntime(),
+  vitePluginGitHubProxy(),
+  vitePluginManusDebugCollector(),
+];
 
 export default defineConfig({
   plugins,
@@ -183,24 +257,6 @@ export default defineConfig({
     fs: {
       strict: true,
       deny: ["**/.*"],
-    },
-    proxy: {
-      "/api/github-raw": {
-        target: "https://raw.githubusercontent.com",
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/github-raw/, ""),
-        configure: (proxy, _options) => {
-          proxy.on("error", (err, _req, _res) => {
-            console.log("proxy error", err);
-          });
-          proxy.on("proxyReq", (proxyReq, req, _res) => {
-            console.log("Sending Request to the Target:", req.url);
-          });
-          proxy.on("proxyRes", (proxyRes, req, _res) => {
-            console.log("Received Response from the Target:", proxyRes.statusCode, req.url);
-          });
-        },
-      },
     },
   },
 });

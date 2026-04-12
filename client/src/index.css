@@ -239,6 +239,36 @@
     margin-top: 0.5em;
     margin-bottom: 0.5em;
   }
+
+  /* Table styles */
+  .prose table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    overflow-x: auto;
+  }
+
+  .prose thead {
+    background-color: oklch(0.96 0.001 286);
+  }
+
+  .prose th {
+    padding: 0.75rem;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid oklch(0.42 0.22 264);
+  }
+
+  .prose td {
+    padding: 0.75rem;
+    border-bottom: 1px solid oklch(0.94 0.001 286);
+  }
+
+  .prose tbody tr:hover {
+    background-color: oklch(0.97 0.001 286);
+  }
+
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
   [type="button"]:not(:disabled),

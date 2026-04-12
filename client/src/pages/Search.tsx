@@ -153,7 +153,7 @@ export default function Search() {
       <footer className="py-12 border-t border-border">
         <div className="container text-center">
           <p className="text-sm text-muted-foreground">
-            © 2024 个人博客. 保留所有权利。
+            © 2026 个人博客. 保留所有权利。
           </p>
         </div>
       </footer>
