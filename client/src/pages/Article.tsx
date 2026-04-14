@@ -3,6 +3,7 @@ import Navigation from "@/components/Navigation";
 import { useArticles } from "@/lib/useArticles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import { ArrowLeft } from "lucide-react";
 
 /**
@@ -108,7 +109,7 @@ export default function Article() {
       <section className="py-12">
         <div className="container max-w-2xl">
           <article className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-code:text-primary prose-pre:bg-accent">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
               {article.content}
             </ReactMarkdown>
           </article>
