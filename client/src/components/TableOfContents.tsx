@@ -91,7 +91,7 @@ export default function TableOfContents({ content }: Props) {
       {!pinned && (
         <button
           onClick={() => setOpen((v) => !v)}
-          className="fixed right-4 top-24 z-40 flex items-center justify-center w-9 h-9 rounded-full bg-background border border-border shadow-md hover:bg-accent transition-colors"
+          className="fixed left-4 top-24 z-40 flex items-center justify-center w-9 h-9 rounded-full bg-background border border-border shadow-md hover:bg-accent transition-colors"
           title="目录"
         >
           {open ? <X size={16} /> : <List size={16} />}
@@ -101,8 +101,8 @@ export default function TableOfContents({ content }: Props) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed right-0 top-0 h-screen w-60 bg-background border-l border-border shadow-xl z-30 flex flex-col transition-transform duration-300 ease-in-out",
-          visible ? "translate-x-0" : "translate-x-full"
+          "fixed left-0 top-0 h-screen w-60 bg-background border-r border-border shadow-xl z-30 flex flex-col transition-transform duration-300 ease-in-out",
+          visible ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Header */}
@@ -138,7 +138,11 @@ export default function TableOfContents({ content }: Props) {
               href={`#${item.id}`}
               onClick={(e) => {
                 e.preventDefault();
-                document.getElementById(item.id)?.scrollIntoView({ behavior: "smooth" });
+                const el = document.getElementById(item.id);
+                if (!el) return;
+                const navHeight = 80;
+                const top = el.getBoundingClientRect().top + window.scrollY - navHeight;
+                window.scrollTo({ top, behavior: "smooth" });
               }}
               className={cn(
                 "block py-1 px-2 text-sm rounded truncate transition-colors",
