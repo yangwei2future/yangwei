@@ -137,10 +137,10 @@ function rewriteImageUrls(content: string, baseUrl: string): string {
     return `![${alt}](${new URL(src, baseUrl).href})`;
   });
 
-  // Rewrite HTML <img src="...">
-  content = content.replace(/<img([^>]*?)src=(["'])([^"']+)\2/gi, (match, before, quote, src) => {
+  // Rewrite src attribute in <img>, <video>, <source> tags
+  content = content.replace(/<(img|video|source)([^>]*?)src=(["'])([^"']+)\3/gi, (match, tag, before, quote, src) => {
     if (/^https?:\/\/|^data:/.test(src)) return match;
-    return `<img${before}src=${quote}${new URL(src, baseUrl).href}${quote}`;
+    return `<${tag}${before}src=${quote}${new URL(src, baseUrl).href}${quote}`;
   });
 
   return content;
