@@ -85,14 +85,15 @@ export async function fetchMarkdownFromGitHub(url: string): Promise<Article> {
       excerpt: data.excerpt || generateExcerpt(content),
     };
 
-    // Generate ID from URL
     const id = generateIdFromUrl(url);
+    const rawBase = apiUrl.substring(0, apiUrl.lastIndexOf("/") + 1);
+    const finalContent = rewriteImageUrls(content.trim(), rawBase);
 
     return {
       id,
       title: metadata.title,
       excerpt: metadata.excerpt,
-      content: content.trim(),
+      content: finalContent,
       date: metadata.date,
       tags: metadata.tags,
       author: metadata.author,
@@ -124,6 +125,25 @@ function convertToApiUrl(url: string): string {
   }
 
   return url;
+}
+
+/**
+ * Rewrite relative image URLs in markdown to absolute GitHub raw URLs
+ */
+function rewriteImageUrls(content: string, baseUrl: string): string {
+  // Rewrite markdown image syntax: ![alt](relative/path)
+  content = content.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, src) => {
+    if (/^https?:\/\/|^data:/.test(src)) return match;
+    return `![${alt}](${new URL(src, baseUrl).href})`;
+  });
+
+  // Rewrite HTML <img src="...">
+  content = content.replace(/<img([^>]*?)src=(["'])([^"']+)\2/gi, (match, before, quote, src) => {
+    if (/^https?:\/\/|^data:/.test(src)) return match;
+    return `<img${before}src=${quote}${new URL(src, baseUrl).href}${quote}`;
+  });
+
+  return content;
 }
 
 /**
