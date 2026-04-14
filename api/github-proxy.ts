@@ -10,7 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).end("Missing 'url' parameter");
   }
 
-  const token = process.env.GITHUB_TOKEN;
+  const token = process.env.GITHUB_TOKEN || process.env.github_token;
   const headers: Record<string, string> = { "User-Agent": "Mozilla/5.0" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 

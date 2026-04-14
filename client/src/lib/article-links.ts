@@ -5,7 +5,12 @@
  */
 
 const STORAGE_KEY = "blog_article_links";
+const CACHE_KEY = "blog_articles_cache";
 const AUTH_PASSWORD = "123456";
+
+function clearArticleCache() {
+  try { localStorage.removeItem(CACHE_KEY); } catch {}
+}
 
 export interface ArticleLink {
   url: string;
@@ -55,6 +60,7 @@ export function addArticleLink(url: string): ArticleLink[] {
 
   const updatedLinks = [...links, newLink];
   saveArticleLinks(updatedLinks);
+  clearArticleCache();
 
   return updatedLinks;
 }
@@ -66,6 +72,7 @@ export function removeArticleLink(url: string): ArticleLink[] {
   const links = getArticleLinks();
   const updatedLinks = links.filter((link) => link.url !== url);
   saveArticleLinks(updatedLinks);
+  clearArticleCache();
   return updatedLinks;
 }
 
