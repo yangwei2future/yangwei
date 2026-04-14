@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { getArticleLinks } from "./article-links";
 import { fetchArticlesFromGitHub } from "./markdown-loader";
 import type { Article } from "./types";
 
@@ -32,9 +31,9 @@ export function useArticles() {
       setLoading(true);
       setError(null);
 
-      const links = getArticleLinks();
+      const urls: string[] = await fetch("/api/articles").then((r) => r.json());
 
-      if (links.length === 0) {
+      if (urls.length === 0) {
         setArticles([]);
         setLoading(false);
         return;
@@ -50,9 +49,7 @@ export function useArticles() {
       }
 
       console.log("Fetching articles from GitHub");
-      const fetchedArticles = await fetchArticlesFromGitHub(
-        links.map((link) => link.url)
-      );
+      const fetchedArticles = await fetchArticlesFromGitHub(urls);
 
       setArticles(fetchedArticles);
       cacheArticles(fetchedArticles);
@@ -80,23 +77,18 @@ export function useArticles() {
  * This will trigger article loading in background
  */
 export function preloadArticles(): void {
-  const links = getArticleLinks();
-  if (links.length === 0) return;
-
-  // Check if already cached
   const cached = getCachedArticles();
   if (cached) return;
 
-  // Start loading in background
-  console.log("Preloading articles...");
-  fetchArticlesFromGitHub(links.map((link) => link.url))
-    .then((articles) => {
-      cacheArticles(articles);
-      console.log("Articles preloaded successfully");
+  fetch("/api/articles")
+    .then((r) => r.json())
+    .then((urls: string[]) => {
+      if (urls.length === 0) return;
+      return fetchArticlesFromGitHub(urls).then((articles) => {
+        cacheArticles(articles);
+      });
     })
-    .catch((error) => {
-      console.error("Error preloading articles:", error);
-    });
+    .catch((err) => console.error("Error preloading articles:", err));
 }
 
 /**

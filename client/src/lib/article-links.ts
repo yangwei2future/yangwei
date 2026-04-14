@@ -1,10 +1,9 @@
 /**
  * Article Links Storage
  *
- * Manages GitHub Markdown URLs with localStorage persistence
+ * Manages GitHub Markdown URLs via /api/articles (server-side, persists across deployments)
  */
 
-const STORAGE_KEY = "blog_article_links";
 const CACHE_KEY = "blog_articles_cache";
 const AUTH_PASSWORD = "123456";
 
@@ -18,62 +17,40 @@ export interface ArticleLink {
 }
 
 /**
- * Get stored article links
+ * Get stored article links from server
  */
-export function getArticleLinks(): ArticleLink[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return [];
-    return JSON.parse(stored);
-  } catch (error) {
-    console.error("Error reading article links:", error);
-    return [];
-  }
-}
-
-/**
- * Save article links to localStorage
- */
-export function saveArticleLinks(links: ArticleLink[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(links));
-  } catch (error) {
-    console.error("Error saving article links:", error);
-  }
+export async function getArticleLinks(): Promise<ArticleLink[]> {
+  const urls: string[] = await fetch("/api/articles").then((r) => r.json());
+  return urls.map((url) => ({ url, addedAt: "" }));
 }
 
 /**
  * Add a new article link
  */
-export function addArticleLink(url: string): ArticleLink[] {
-  const links = getArticleLinks();
-
-  // Check if URL already exists
-  if (links.some((link) => link.url === url)) {
-    throw new Error("此链接已存在");
+export async function addArticleLink(url: string): Promise<void> {
+  const res = await fetch("/api/articles", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+  if (!res.ok) {
+    const { error } = await res.json();
+    throw new Error(error || "添加失败");
   }
-
-  const newLink: ArticleLink = {
-    url,
-    addedAt: new Date().toISOString(),
-  };
-
-  const updatedLinks = [...links, newLink];
-  saveArticleLinks(updatedLinks);
   clearArticleCache();
-
-  return updatedLinks;
 }
 
 /**
  * Remove an article link
  */
-export function removeArticleLink(url: string): ArticleLink[] {
-  const links = getArticleLinks();
-  const updatedLinks = links.filter((link) => link.url !== url);
-  saveArticleLinks(updatedLinks);
+export async function removeArticleLink(url: string): Promise<void> {
+  const res = await fetch("/api/articles", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+  if (!res.ok) throw new Error("删除失败");
   clearArticleCache();
-  return updatedLinks;
 }
 
 /**
@@ -88,8 +65,7 @@ export function verifyPassword(password: string): boolean {
  */
 export function isAuthenticated(): boolean {
   try {
-    const auth = sessionStorage.getItem("blog_authenticated");
-    return auth === "true";
+    return sessionStorage.getItem("blog_authenticated") === "true";
   } catch {
     return false;
   }
@@ -101,9 +77,7 @@ export function isAuthenticated(): boolean {
 export function setAuthenticated(status: boolean): void {
   try {
     sessionStorage.setItem("blog_authenticated", status.toString());
-  } catch (error) {
-    console.error("Error setting auth status:", error);
-  }
+  } catch {}
 }
 
 /**

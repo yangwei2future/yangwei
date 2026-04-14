@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import Navigation from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lock, LogOut, RefreshCw } from "lucide-react";
+import { Lock, LogOut, Loader2 } from "lucide-react";
 import {
   verifyPassword,
   isAuthenticated,
@@ -15,29 +15,32 @@ import {
   getArticleLinks,
   addArticleLink,
   removeArticleLink,
+  type ArticleLink,
 } from "@/lib/article-links";
-
-/**
- * Admin Page - Article Links Manager
- *
- * Password protected (default: 123456)
- * Manage GitHub Markdown article links
- */
 
 export default function Admin() {
   const [, setLocation] = useLocation();
   const [password, setPassword] = useState("");
   const [authenticated, setAuthState] = useState(isAuthenticated());
   const [error, setError] = useState("");
-  const [newUrl, setNewUrl] = useState("");
-  const [links, setLinks] = useState(getArticleLinks());
   const [success, setSuccess] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
+  const [newUrl, setNewUrl] = useState("");
+  const [links, setLinks] = useState<ArticleLink[]>([]);
+  const [loadingLinks, setLoadingLinks] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (authenticated) {
+      setLoadingLinks(true);
+      getArticleLinks()
+        .then(setLinks)
+        .finally(() => setLoadingLinks(false));
+    }
+  }, [authenticated]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
     if (verifyPassword(password)) {
       setAuthenticated(true);
       setAuthState(true);
@@ -53,47 +56,40 @@ export default function Admin() {
     setLocation("/");
   };
 
-  const handleAddLink = (e: React.FormEvent) => {
+  const handleAddLink = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
-
-    if (!newUrl.trim()) {
-      setError("请输入链接地址");
-      return;
-    }
-
-    // Validate URL format
+    if (!newUrl.trim()) { setError("请输入链接地址"); return; }
     if (!isValidGitHubUrl(newUrl)) {
       setError("请输入有效的 GitHub Markdown 链接（如：https://github.com/user/repo/blob/main/article.md）");
       return;
     }
-
+    setSubmitting(true);
     try {
-      const updatedLinks = addArticleLink(newUrl.trim());
-      setLinks(updatedLinks);
+      await addArticleLink(newUrl.trim());
+      const updated = await getArticleLinks();
+      setLinks(updated);
       setNewUrl("");
       setSuccess("文章链接添加成功！");
     } catch (err) {
       setError(err instanceof Error ? err.message : "添加失败");
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const handleRemoveLink = (url: string) => {
-    const updatedLinks = removeArticleLink(url);
-    setLinks(updatedLinks);
-    setSuccess("文章链接已删除");
-  };
-
-  const handleRefreshArticles = () => {
-    setRefreshing(true);
-    setSuccess("已清除缓存，下次加载文章时会从 GitHub 拉取最新内容");
-
-    // Clear article cache by triggering a page reload
-    setTimeout(() => {
-      setRefreshing(false);
-      window.location.href = "/articles";
-    }, 1000);
+  const handleRemoveLink = async (url: string) => {
+    setError("");
+    setSuccess("");
+    try {
+      await removeArticleLink(url);
+      const updated = await getArticleLinks();
+      setLinks(updated);
+      setSuccess("文章链接已删除");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "删除失败");
+    }
   };
 
   function isValidGitHubUrl(url: string): boolean {
@@ -130,9 +126,7 @@ export default function Admin() {
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
-                <Button type="submit" className="w-full">
-                  登录
-                </Button>
+                <Button type="submit" className="w-full">登录</Button>
               </form>
             </CardContent>
           </Card>
@@ -147,19 +141,12 @@ export default function Admin() {
       <div className="container max-w-4xl py-12">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">文章链接管理</h1>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleRefreshArticles} disabled={refreshing}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-              {refreshing ? '刷新中...' : '刷新文章'}
-            </Button>
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              退出
-            </Button>
-          </div>
+          <Button variant="outline" onClick={handleLogout}>
+            <LogOut className="h-4 w-4 mr-2" />
+            退出
+          </Button>
         </div>
 
-        {/* Add new link */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>添加文章链接</CardTitle>
@@ -169,35 +156,31 @@ export default function Admin() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAddLink} className="space-y-4">
-              <div>
-                <Input
-                  value={newUrl}
-                  onChange={(e) => setNewUrl(e.target.value)}
-                  placeholder="https://github.com/username/repo/blob/branch/path/to/article.md"
-                />
-              </div>
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              {success && (
-                <Alert>
-                  <AlertDescription>{success}</AlertDescription>
-                </Alert>
-              )}
-              <Button type="submit">添加文章</Button>
+              <Input
+                value={newUrl}
+                onChange={(e) => setNewUrl(e.target.value)}
+                placeholder="https://github.com/username/repo/blob/branch/path/to/article.md"
+              />
+              {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+              {success && <Alert><AlertDescription>{success}</AlertDescription></Alert>}
+              <Button type="submit" disabled={submitting}>
+                {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                添加文章
+              </Button>
             </form>
           </CardContent>
         </Card>
 
-        {/* Article links list */}
         <Card>
           <CardHeader>
             <CardTitle>已添加的文章 ({links.length})</CardTitle>
           </CardHeader>
           <CardContent>
-            {links.length === 0 ? (
+            {loadingLinks ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : links.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <p>暂无文章链接</p>
                 <p className="text-sm mt-2">请添加 GitHub Markdown 链接来发布文章</p>
@@ -205,19 +188,12 @@ export default function Admin() {
             ) : (
               <div className="space-y-3">
                 {links.map((link) => (
-                  <div
-                    key={link.url}
-                    className="flex items-center justify-between p-3 border rounded-sm"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{link.url}</p>
-                      <p className="text-xs text-muted-foreground">
-                        添加时间：{new Date(link.addedAt).toLocaleString("zh-CN")}
-                      </p>
-                    </div>
+                  <div key={link.url} className="flex items-center justify-between p-3 border rounded-sm">
+                    <p className="text-sm font-medium truncate flex-1 min-w-0">{link.url}</p>
                     <Button
                       variant="destructive"
                       size="sm"
+                      className="ml-3 shrink-0"
                       onClick={() => handleRemoveLink(link.url)}
                     >
                       删除

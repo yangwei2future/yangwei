@@ -44,7 +44,7 @@ function parseFrontmatter(content: string): { data: Record<string, any>; content
       value = value
         .slice(1, -1)
         .split(",")
-        .map((item) => item.trim());
+        .map((item: string) => item.trim());
     }
 
     data[key] = value;
@@ -92,7 +92,7 @@ export async function fetchMarkdownFromGitHub(url: string): Promise<Article> {
     return {
       id,
       title: metadata.title,
-      excerpt: metadata.excerpt,
+      excerpt: metadata.excerpt ?? "",
       content: finalContent,
       date: metadata.date,
       tags: metadata.tags,
