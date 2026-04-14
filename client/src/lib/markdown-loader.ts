@@ -61,22 +61,11 @@ export async function fetchMarkdownFromGitHub(url: string): Promise<Article> {
     // Convert GitHub URL to API URL
     const apiUrl = convertToApiUrl(url);
 
-    // In development, use Vite custom proxy to bypass CORS
-    // In production (Vercel), direct fetch works fine
-    const isDev = import.meta.env.DEV;
-    const fetchUrl = isDev
-      ? `/api/github-proxy?url=${encodeURIComponent(apiUrl)}`
-      : apiUrl;
+    const fetchUrl = `/api/github-proxy?url=${encodeURIComponent(apiUrl)}`;
 
     console.log("Fetching from:", fetchUrl);
 
-    // Fetch content
-    const response = await fetch(fetchUrl, {
-      headers: {
-        Accept: "application/vnd.github.v3.raw",
-        "User-Agent": "Mozilla/5.0",
-      },
-    });
+    const response = await fetch(fetchUrl);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch: ${response.status}`);
@@ -115,30 +104,25 @@ export async function fetchMarkdownFromGitHub(url: string): Promise<Article> {
 }
 
 /**
- * Convert GitHub URL to GitHub API URL
+ * Convert GitHub URL to raw.githubusercontent.com URL
  */
 function convertToApiUrl(url: string): string {
-  // Already a raw URL - convert to API
+  // Already a raw URL - use as-is
   if (url.includes("raw.githubusercontent.com")) {
-    const match = url.match(/raw\.githubusercontent\.com\/([^/]+)\/([^/]+)\/([^/]+)\/(.+)/);
-    if (match) {
-      const [, user, repo, branch, path] = match;
-      return `https://api.github.com/repos/${user}/${repo}/contents/${path}?ref=${branch}`;
-    }
+    return url;
   }
 
-  // Convert blob URL to API URL
+  // Convert blob URL to raw URL
   // https://github.com/user/repo/blob/branch/path/file.md
-  // -> https://api.github.com/repos/user/repo/contents/path/file.md?ref=branch
+  // -> https://raw.githubusercontent.com/user/repo/branch/path/file.md
   const githubBlobPattern = /github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)/;
   const match = url.match(githubBlobPattern);
 
   if (match) {
     const [, user, repo, branch, path] = match;
-    return `https://api.github.com/repos/${user}/${repo}/contents/${path}?ref=${branch}`;
+    return `https://raw.githubusercontent.com/${user}/${repo}/${branch}/${path}`;
   }
 
-  // If pattern doesn't match, return original URL
   return url;
 }
 
@@ -169,9 +153,8 @@ function generateExcerpt(content: string): string {
  * Generate unique ID from URL
  */
 function generateIdFromUrl(url: string): string {
-  // Extract filename from URL
   const filename = url.split("/").pop()?.replace(".md", "") || "article";
-  return filename;
+  return decodeURIComponent(filename);
 }
 
 /**

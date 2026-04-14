@@ -5,7 +5,8 @@ import fs from "node:fs";
 import http from "node:http";
 import https from "node:https";
 import path from "node:path";
-import { defineConfig, type Plugin, type ViteDevServer } from "vite";
+import { ProxyAgent, fetch as undiciFetch } from "undici";
+import { defineConfig, loadEnv, type Plugin, type ViteDevServer } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 
 // =============================================================================
@@ -75,8 +76,13 @@ function writeToLogFile(source: LogSource, entries: unknown[]) {
  * Uses Node.js https module which works with system proxy
  */
 function vitePluginGitHubProxy(): Plugin {
+  let env: Record<string, string> = {};
+
   return {
     name: "github-proxy",
+    config(_, { mode }) {
+      env = loadEnv(mode, process.cwd(), "");
+    },
     configureServer(server: ViteDevServer) {
       server.middlewares.use("/api/github-proxy", async (req, res, next) => {
         if (req.method !== "GET") {
@@ -84,7 +90,6 @@ function vitePluginGitHubProxy(): Plugin {
         }
 
         try {
-          // Extract URL from query parameter
           const urlObj = new URL(req.url || "", `http://localhost:${server.config.server.port}`);
           const targetUrl = urlObj.searchParams.get("url");
 
@@ -96,39 +101,38 @@ function vitePluginGitHubProxy(): Plugin {
 
           console.log(`[GitHub Proxy] Fetching: ${targetUrl}`);
 
-          // Use Node.js https module (works with HTTP_PROXY env var)
-          https.get(
-            targetUrl,
-            {
-              headers: {
-                Accept: "application/vnd.github.v3.raw",
-                "User-Agent": "Mozilla/5.0",
-              },
-            },
-            (proxyRes) => {
-              if (proxyRes.statusCode !== 200) {
-                console.error(`[GitHub Proxy] Error: ${proxyRes.statusCode}`);
-                res.writeHead(proxyRes.statusCode || 500, { "Content-Type": "text/plain" });
-                proxyRes.pipe(res);
-                return;
-              }
+          const token = env.GITHUB_TOKEN;
+          const headers: Record<string, string> = { "User-Agent": "Mozilla/5.0" };
+          if (token) headers["Authorization"] = `Bearer ${token}`;
 
-              console.log(`[GitHub Proxy] Success: 200`);
-              res.writeHead(200, {
-                "Content-Type": "text/plain; charset=utf-8",
-                "Access-Control-Allow-Origin": "*",
-              });
-              proxyRes.pipe(res);
-            }
-          ).on("error", (err) => {
-            console.error(`[GitHub Proxy] Network error:`, err.message);
-            res.writeHead(500, { "Content-Type": "text/plain" });
-            res.end(`Network error: ${err.message}`);
+          const proxyUrl =
+            env.HTTPS_PROXY || env.https_proxy || env.HTTP_PROXY || env.http_proxy;
+          const dispatcher = proxyUrl ? new ProxyAgent(proxyUrl) : undefined;
+
+          console.log(`[GitHub Proxy] Via proxy: ${proxyUrl || "none"}`);
+
+          const response = await undiciFetch(targetUrl, {
+            headers,
+            dispatcher,
+          } as Parameters<typeof undiciFetch>[1]);
+
+          if (!response.ok) {
+            console.error(`[GitHub Proxy] Error: ${response.status}`);
+            res.writeHead(response.status, { "Content-Type": "text/plain" });
+            res.end(await response.text());
+            return;
+          }
+
+          console.log(`[GitHub Proxy] Success: 200`);
+          res.writeHead(200, {
+            "Content-Type": "text/plain; charset=utf-8",
+            "Access-Control-Allow-Origin": "*",
           });
+          res.end(await response.text());
         } catch (err) {
           console.error(`[GitHub Proxy] Error:`, err);
           res.writeHead(500, { "Content-Type": "text/plain" });
-          res.end("Internal server error");
+          res.end(`Error: ${err instanceof Error ? err.message : String(err)}`);
         }
       });
     },
