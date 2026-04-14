@@ -1,10 +1,26 @@
 import { useParams, Link } from "wouter";
 import Navigation from "@/components/Navigation";
+import TableOfContents, { slugifyHeading, extractTextFromChildren } from "@/components/TableOfContents";
 import { useArticles } from "@/lib/useArticles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { ArrowLeft } from "lucide-react";
+import type { ComponentPropsWithoutRef } from "react";
+
+function makeHeading(Tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
+  return function Heading({ children, ...props }: ComponentPropsWithoutRef<typeof Tag>) {
+    const id = slugifyHeading(extractTextFromChildren(children));
+    return <Tag id={id} {...props}>{children}</Tag>;
+  };
+}
+
+const markdownComponents = {
+  h1: makeHeading("h1"),
+  h2: makeHeading("h2"),
+  h3: makeHeading("h3"),
+  h4: makeHeading("h4"),
+};
 
 /**
  * Article Detail Page
@@ -63,6 +79,7 @@ export default function Article() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
+      <TableOfContents content={article.content} />
 
       {/* Article Header */}
       <section className="py-12 border-b border-border">
@@ -109,7 +126,7 @@ export default function Article() {
       <section className="py-12">
         <div className="container max-w-2xl">
           <article className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-code:text-primary prose-pre:bg-accent">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={markdownComponents}>
               {article.content}
             </ReactMarkdown>
           </article>
