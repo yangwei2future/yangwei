@@ -16,15 +16,16 @@ export interface ArticleLink {
   title?: string;
   createdAt?: string;
   updatedAt?: string;
+  hidden?: boolean;
 }
 
 /**
  * Get stored article links from server
  */
 export async function getArticleLinks(): Promise<ArticleLink[]> {
-  const entries: { url: string; title?: string; createdAt?: string; updatedAt?: string }[] =
+  const entries: { url: string; title?: string; createdAt?: string; updatedAt?: string; hidden?: boolean }[] =
     await fetch("/api/articles").then((r) => r.json());
-  return entries.map((e) => ({ url: e.url, title: e.title, createdAt: e.createdAt, updatedAt: e.updatedAt }));
+  return entries.map((e) => ({ url: e.url, title: e.title, createdAt: e.createdAt, updatedAt: e.updatedAt, hidden: e.hidden }));
 }
 
 /**

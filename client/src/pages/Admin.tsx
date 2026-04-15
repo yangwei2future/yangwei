@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lock, LogOut, Loader2, RefreshCw, Pencil, Check, X } from "lucide-react";
+import { Lock, LogOut, Loader2, RefreshCw, Pencil, Check, X, EyeOff, Eye } from "lucide-react";
 import {
   verifyPassword,
   isAuthenticated,
@@ -30,7 +30,7 @@ export default function Admin() {
   const [links, setLinks] = useState<ArticleLink[]>([]);
   const [loadingLinks, setLoadingLinks] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { articles, refresh, refreshSingle, updateTitle } = useArticles();
+  const { articles, refresh, refreshSingle, updateTitle, toggleHidden } = useArticles();
   const [syncing, setSyncing] = useState(false);
   const [syncingUrl, setSyncingUrl] = useState<string | null>(null);
   const [editingUrl, setEditingUrl] = useState<string | null>(null);
@@ -246,7 +246,7 @@ export default function Admin() {
             ) : (
               <div className="space-y-3">
                 {links.map((link) => (
-                  <div key={link.url} className="p-3 border rounded-lg space-y-2">
+                  <div key={link.url} className={`p-3 border rounded-lg space-y-2 ${link.hidden ? "opacity-50" : ""}`}>
                     {/* Title row */}
                     {editingUrl === link.url ? (
                       <div className="flex items-center gap-2">
@@ -272,6 +272,9 @@ export default function Admin() {
                               ? <p className="text-sm font-medium truncate">{displayTitle}</p>
                               : <p className="text-sm text-muted-foreground truncate italic">加载中...</p>
                             }
+                            {link.hidden && (
+                              <span className="shrink-0 text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">已隐藏</span>
+                            )}
                             <button onClick={() => { setEditingUrl(link.url); setEditingTitle(link.title || ""); }} className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors">
                               <Pencil size={12} />
                             </button>
@@ -303,6 +306,17 @@ export default function Admin() {
                       >
                         <RefreshCw size={13} className={syncingUrl === link.url ? "animate-spin" : ""} />
                         同步
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          await toggleHidden(link.url, !link.hidden);
+                          setLinks(await getArticleLinks());
+                        }}
+                      >
+                        {link.hidden ? <Eye size={13} /> : <EyeOff size={13} />}
+                        {link.hidden ? "显示" : "隐藏"}
                       </Button>
                       <Button
                         variant="destructive"

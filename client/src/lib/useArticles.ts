@@ -31,8 +31,10 @@ export function useArticles() {
       setLoading(true);
       setError(null);
 
-      const entries: { url: string; title?: string; createdAt?: string; updatedAt?: string }[] =
+      const allEntries: { url: string; title?: string; createdAt?: string; updatedAt?: string; hidden?: boolean }[] =
         await fetch("/api/articles").then((r) => r.json());
+      // Filter out hidden articles for public view
+      const entries = allEntries.filter((e) => !e.hidden);
 
       if (entries.length === 0) {
         setArticles([]);
@@ -128,7 +130,30 @@ export function useArticles() {
     });
   }
 
-  return { articles, loading, error, reload: loadArticles, refresh: refreshArticles, refreshSingle: refreshSingleArticle, updateTitle: updateArticleTitle };
+  /**
+   * Toggle hidden state for a single article
+   */
+  async function toggleHidden(url: string, hidden: boolean) {
+    await fetch("/api/articles", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, hidden }),
+    });
+    // Remove from public list if hidden, reload if un-hiding
+    if (hidden) {
+      const id = decodeURIComponent(url.split("/").pop()?.replace(".md", "") ?? "");
+      setArticles((prev) => {
+        const next = prev.filter((a) => a.id !== id);
+        cacheArticles(next);
+        return next;
+      });
+    } else {
+      clearCache();
+      await loadArticles();
+    }
+  }
+
+  return { articles, loading, error, reload: loadArticles, refresh: refreshArticles, refreshSingle: refreshSingleArticle, updateTitle: updateArticleTitle, toggleHidden };
 }
 
 /**
