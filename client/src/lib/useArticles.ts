@@ -31,7 +31,8 @@ export function useArticles() {
       setLoading(true);
       setError(null);
 
-      const entries: { url: string; title?: string }[] = await fetch("/api/articles").then((r) => r.json());
+      const entries: { url: string; title?: string; createdAt?: string; updatedAt?: string }[] =
+        await fetch("/api/articles").then((r) => r.json());
 
       if (entries.length === 0) {
         setArticles([]);
@@ -51,8 +52,18 @@ export function useArticles() {
       console.log("Fetching articles from GitHub");
       const fetchedArticles = await fetchArticlesFromGitHub(entries);
 
-      setArticles(fetchedArticles);
-      cacheArticles(fetchedArticles);
+      // Merge server-side timestamps into articles
+      const articlesWithTs = fetchedArticles.map((article) => {
+        const entry = entries.find((e) => e.url.includes(encodeURIComponent(article.id)) || e.url.endsWith(article.id + ".md"));
+        return {
+          ...article,
+          createdAt: entry?.createdAt || new Date().toISOString(),
+          updatedAt: entry?.updatedAt,
+        };
+      });
+
+      setArticles(articlesWithTs);
+      cacheArticles(articlesWithTs);
     } catch (err) {
       setError(err instanceof Error ? err.message : "加载文章失败");
       console.error("Error loading articles:", err);
@@ -62,9 +73,10 @@ export function useArticles() {
   }
 
   /**
-   * Force refresh all articles (clear cache)
+   * Force refresh all articles (clear cache and update updatedAt on server)
    */
   async function refreshArticles() {
+    await fetch("/api/articles", { method: "PATCH" });
     clearCache();
     await loadArticles();
   }

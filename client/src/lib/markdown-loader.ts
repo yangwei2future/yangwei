@@ -99,7 +99,7 @@ export async function fetchMarkdownFromGitHub(url: string, customTitle?: string)
         ? data.date
         : toBeijingISOString(),
       tags: Array.isArray(data.tags) ? data.tags : [],
-      author: data.author || "yangwei",
+      author: data.author || "杨卫",
       excerpt: data.excerpt || generateExcerpt(content),
     };
 
@@ -115,6 +115,7 @@ export async function fetchMarkdownFromGitHub(url: string, customTitle?: string)
       date: metadata.date,
       tags: metadata.tags,
       author: metadata.author,
+      createdAt: new Date().toISOString(),
     };
   } catch (error) {
     console.error("Error fetching markdown:", error);

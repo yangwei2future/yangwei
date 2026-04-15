@@ -14,15 +14,17 @@ function clearArticleCache() {
 export interface ArticleLink {
   url: string;
   title?: string;
-  addedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /**
  * Get stored article links from server
  */
 export async function getArticleLinks(): Promise<ArticleLink[]> {
-  const entries: { url: string; title?: string }[] = await fetch("/api/articles").then((r) => r.json());
-  return entries.map((e) => ({ url: e.url, title: e.title, addedAt: "" }));
+  const entries: { url: string; title?: string; createdAt?: string; updatedAt?: string }[] =
+    await fetch("/api/articles").then((r) => r.json());
+  return entries.map((e) => ({ url: e.url, title: e.title, createdAt: e.createdAt, updatedAt: e.updatedAt }));
 }
 
 /**

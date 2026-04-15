@@ -10,6 +10,8 @@ export interface Article {
   date: string;
   tags: string[];
   author: string;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface BlogConfig {

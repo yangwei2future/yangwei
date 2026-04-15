@@ -96,14 +96,14 @@ export default function Article() {
 
             <div className="mt-6 flex items-center justify-between text-sm text-muted-foreground">
               <time>
-                {new Date(article.date).toLocaleString("zh-CN", {
+                {article.updatedAt ? "更新于 " : "创建于 "}
+                {new Date(article.updatedAt || article.createdAt).toLocaleString("zh-CN", {
                   timeZone: "Asia/Shanghai",
                   year: "numeric",
                   month: "long",
                   day: "numeric",
                   hour: "2-digit",
                   minute: "2-digit",
-                  second: "2-digit",
                 })}
               </time>
               <span>{article.author}</span>

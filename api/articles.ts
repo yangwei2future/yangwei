@@ -8,6 +8,8 @@ const FILE_PATH = "articles-config.json";
 interface ArticleEntry {
   url: string;
   title?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 async function getConfig(): Promise<{ entries: ArticleEntry[]; sha: string }> {
@@ -50,7 +52,7 @@ async function saveConfig(entries: ArticleEntry[], sha: string): Promise<void> {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
 
@@ -65,9 +67,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!url) return res.status(400).json({ error: "Missing url" });
       const { entries, sha } = await getConfig();
       if (entries.some((e) => e.url === url)) return res.status(409).json({ error: "此链接已存在" });
-      const entry: ArticleEntry = { url };
+      const entry: ArticleEntry = { url, createdAt: new Date().toISOString() };
       if (title?.trim()) entry.title = title.trim();
       await saveConfig([...entries, entry], sha);
+      return res.status(200).json({ ok: true });
+    }
+
+    if (req.method === "PATCH") {
+      const { entries, sha } = await getConfig();
+      const updatedAt = new Date().toISOString();
+      await saveConfig(entries.map((e) => ({ ...e, updatedAt })), sha);
       return res.status(200).json({ ok: true });
     }
 

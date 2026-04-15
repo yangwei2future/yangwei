@@ -53,7 +53,8 @@ useEffect(() => {
 4. 合理使用依赖数组`,
     date: "2024-03-15",
     tags: ["React", "JavaScript", "前端"],
-    author: "个人博客",
+    author: "杨卫",
+    createdAt: new Date().toISOString(),
   },
   {
     id: "typescript-best-practices",
@@ -101,7 +102,8 @@ function identity<T>(arg: T): T {
 4. 使用类型守卫进行类型检查`,
     date: "2024-03-10",
     tags: ["TypeScript", "JavaScript", "最佳实践"],
-    author: "个人博客",
+    author: "杨卫",
+    createdAt: new Date().toISOString(),
   },
   {
     id: "web-performance-optimization",
@@ -149,7 +151,8 @@ for (let i = 0; i < 100; i++) {
 使用 Performance API 和 Web Vitals 监测应用性能。`,
     date: "2024-03-05",
     tags: ["性能优化", "Web", "前端"],
-    author: "个人博客",
+    author: "杨卫",
+    createdAt: new Date().toISOString(),
   },
 ];
 
