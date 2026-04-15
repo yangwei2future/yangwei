@@ -7,7 +7,8 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
+import { useState, useEffect } from "react";
 import type { ComponentPropsWithoutRef } from "react";
 
 function makeHeading(Tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
@@ -17,7 +18,7 @@ function makeHeading(Tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
   };
 }
 
-const markdownComponents = {
+const headingComponents = {
   h1: makeHeading("h1"),
   h2: makeHeading("h2"),
   h3: makeHeading("h3"),
@@ -36,6 +37,35 @@ const markdownComponents = {
 export default function Article() {
   const { id } = useParams<{ id: string }>();
   const { articles, loading, error } = useArticles();
+  const [zoomedSrc, setZoomedSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!zoomedSrc) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setZoomedSrc(null); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [zoomedSrc]);
+
+  const markdownComponents = {
+    ...headingComponents,
+    img({ src, alt }: { src?: string; alt?: string }) {
+      return (
+        <img
+          src={src}
+          alt={alt}
+          onClick={() => src && setZoomedSrc(src)}
+          className="cursor-zoom-in rounded max-w-full"
+        />
+      );
+    },
+    video({ src, children, ...props }: ComponentPropsWithoutRef<"video">) {
+      return (
+        <video controls className="w-full rounded" src={src} {...props}>
+          {children}
+        </video>
+      );
+    },
+  };
 
   if (loading) {
     return (
@@ -132,10 +162,30 @@ export default function Article() {
       <section className="py-12">
         <div className="container max-w-4xl">
           <article className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-code:text-primary prose-pre:bg-accent">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeHighlight]} components={markdownComponents}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeHighlight]} components={markdownComponents as any}>
               {article.content}
             </ReactMarkdown>
           </article>
+
+          {/* Image Lightbox */}
+          {zoomedSrc && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+              onClick={() => setZoomedSrc(null)}
+            >
+              <button
+                className="absolute top-4 right-4 text-white/80 hover:text-white"
+                onClick={() => setZoomedSrc(null)}
+              >
+                <X size={28} />
+              </button>
+              <img
+                src={zoomedSrc}
+                className="max-w-[90vw] max-h-[90vh] rounded shadow-2xl object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          )}
         </div>
       </section>
 
