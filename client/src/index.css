@@ -189,8 +189,6 @@
 
   a:hover {
     color: var(--link-hover);
-    text-decoration: underline;
-    text-decoration-color: oklch(0.35 0.18 255 / 40%);
   }
   
   blockquote {

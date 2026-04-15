@@ -206,7 +206,7 @@ export default function About() {
           <div className="space-y-3">
             <a
               href="mailto:ywei_20@126.com"
-              className="flex items-center gap-3 p-4 rounded-sm border border-border hover:border-primary hover:shadow-md transition-all group"
+              className="flex items-center gap-3 p-4 rounded-sm border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150 group"
             >
               <Mail size={20} className="text-primary" />
               <div>
@@ -223,7 +223,7 @@ export default function About() {
               href="https://github.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 p-4 rounded-sm border border-border hover:border-primary hover:shadow-md transition-all group"
+              className="flex items-center gap-3 p-4 rounded-sm border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150 group"
             >
               <Github size={20} className="text-primary" />
               <div className="flex-1">

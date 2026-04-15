@@ -26,7 +26,7 @@ export default function ArticleCard({
 }: ArticleCardProps) {
   return (
     <Link href={`/article/${id}`} className="block group">
-      <article className="p-6 bg-card rounded-sm border border-border hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
+      <article className="p-6 bg-card rounded-sm border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150">
         {/* Date */}
         <time className="text-sm text-muted-foreground">
           {new Date(date).toLocaleDateString("zh-CN", {
