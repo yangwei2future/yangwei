@@ -74,9 +74,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === "PATCH") {
+      const { url, title } = req.body || {};
       const { entries, sha } = await getConfig();
       const updatedAt = new Date().toISOString();
-      await saveConfig(entries.map((e) => ({ ...e, updatedAt })), sha);
+      if (url) {
+        // Update single entry: updatedAt + optional title
+        await saveConfig(
+          entries.map((e) => {
+            if (e.url !== url) return e;
+            const updated: ArticleEntry = { ...e, updatedAt };
+            if (title !== undefined) updated.title = title.trim() || undefined;
+            return updated;
+          }),
+          sha
+        );
+      } else {
+        // Sync all: update every entry's updatedAt
+        await saveConfig(entries.map((e) => ({ ...e, updatedAt })), sha);
+      }
       return res.status(200).json({ ok: true });
     }
 

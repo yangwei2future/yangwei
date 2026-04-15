@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lock, LogOut, Loader2, RefreshCw } from "lucide-react";
+import { Lock, LogOut, Loader2, RefreshCw, Pencil, Check, X } from "lucide-react";
 import {
   verifyPassword,
   isAuthenticated,
@@ -30,8 +30,11 @@ export default function Admin() {
   const [links, setLinks] = useState<ArticleLink[]>([]);
   const [loadingLinks, setLoadingLinks] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { refresh } = useArticles();
+  const { refresh, refreshSingle, updateTitle } = useArticles();
   const [syncing, setSyncing] = useState(false);
+  const [syncingUrl, setSyncingUrl] = useState<string | null>(null);
+  const [editingUrl, setEditingUrl] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
 
   async function handleSync() {
     setSyncing(true);
@@ -110,6 +113,31 @@ export default function Admin() {
       setError(err instanceof Error ? err.message : "删除失败");
     }
   };
+
+  async function handleSyncSingle(url: string) {
+    setSyncingUrl(url);
+    setError(""); setSuccess("");
+    try {
+      await refreshSingle(url);
+      const updated = await getArticleLinks();
+      setLinks(updated);
+      setSuccess("同步成功");
+    } catch {
+      setError("同步失败，请稍后重试");
+    } finally {
+      setSyncingUrl(null);
+    }
+  }
+
+  async function handleSaveTitle(url: string) {
+    try {
+      await updateTitle(url, editingTitle);
+      const updated = await getArticleLinks();
+      setLinks(updated);
+    } finally {
+      setEditingUrl(null);
+    }
+  }
 
   function isValidGitHubUrl(url: string): boolean {
     return url.includes("github.com") && url.endsWith(".md");
@@ -218,31 +246,65 @@ export default function Admin() {
             ) : (
               <div className="space-y-3">
                 {links.map((link) => (
-                  <div key={link.url} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex-1 min-w-0">
-                      {link.title && <p className="text-sm font-medium truncate">{link.title}</p>}
-                      <p className="text-xs text-muted-foreground truncate">{link.url}</p>
-                      <div className="flex gap-4 mt-1">
-                        {link.createdAt && (
-                          <p className="text-xs text-muted-foreground/70">
-                            创建于 {new Date(link.createdAt).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                          </p>
-                        )}
-                        {link.updatedAt && (
-                          <p className="text-xs text-muted-foreground/70">
-                            更新于 {new Date(link.updatedAt).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
-                          </p>
-                        )}
+                  <div key={link.url} className="p-3 border rounded-lg space-y-2">
+                    {/* Title row */}
+                    {editingUrl === link.url ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          autoFocus
+                          value={editingTitle}
+                          onChange={(e) => setEditingTitle(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") handleSaveTitle(link.url); if (e.key === "Escape") setEditingUrl(null); }}
+                          placeholder="自定义标题"
+                          className="h-7 text-sm"
+                        />
+                        <button onClick={() => handleSaveTitle(link.url)} className="text-green-600 hover:text-green-700"><Check size={15} /></button>
+                        <button onClick={() => setEditingUrl(null)} className="text-muted-foreground hover:text-foreground"><X size={15} /></button>
                       </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {link.title
+                          ? <p className="text-sm font-medium truncate">{link.title}</p>
+                          : <p className="text-sm text-muted-foreground truncate italic">未设置标题</p>
+                        }
+                        <button onClick={() => { setEditingUrl(link.url); setEditingTitle(link.title || ""); }} className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+                          <Pencil size={12} />
+                        </button>
+                      </div>
+                    )}
+                    {/* URL + timestamps */}
+                    <p className="text-xs text-muted-foreground truncate">{link.url}</p>
+                    <div className="flex gap-4">
+                      {link.createdAt && (
+                        <p className="text-xs text-muted-foreground/70">
+                          创建于 {new Date(link.createdAt).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      )}
+                      {link.updatedAt && (
+                        <p className="text-xs text-muted-foreground/70">
+                          更新于 {new Date(link.updatedAt).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      )}
                     </div>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      className="ml-3 shrink-0"
-                      onClick={() => handleRemoveLink(link.url)}
-                    >
-                      删除
-                    </Button>
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={syncingUrl === link.url}
+                        onClick={() => handleSyncSingle(link.url)}
+                      >
+                        <RefreshCw size={13} className={syncingUrl === link.url ? "animate-spin" : ""} />
+                        同步
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleRemoveLink(link.url)}
+                      >
+                        删除
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

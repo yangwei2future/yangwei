@@ -81,7 +81,54 @@ export function useArticles() {
     await loadArticles();
   }
 
-  return { articles, loading, error, reload: loadArticles, refresh: refreshArticles };
+  /**
+   * Refresh a single article by URL
+   */
+  async function refreshSingleArticle(url: string) {
+    await fetch("/api/articles", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+    const entry: { url: string; title?: string; createdAt?: string; updatedAt?: string } =
+      await fetch("/api/articles").then((r) => r.json()).then((entries: any[]) =>
+        entries.find((e) => e.url === url)
+      );
+    if (!entry) return;
+    const [fetched] = await fetchArticlesFromGitHub([entry]);
+    const updated = {
+      ...fetched,
+      createdAt: entry.createdAt || new Date().toISOString(),
+      updatedAt: entry.updatedAt,
+    };
+    setArticles((prev) => {
+      const next = prev.map((a) => (a.id === updated.id ? updated : a));
+      cacheArticles(next);
+      return next;
+    });
+  }
+
+  /**
+   * Update title for a single article
+   */
+  async function updateArticleTitle(url: string, title: string) {
+    await fetch("/api/articles", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, title }),
+    });
+    setArticles((prev) => {
+      const next = prev.map((a) =>
+        (a.id === url.split("/").pop()?.replace(".md", "") || a.id === decodeURIComponent(url.split("/").pop()?.replace(".md", "") ?? ""))
+          ? { ...a, title: title || a.title }
+          : a
+      );
+      cacheArticles(next);
+      return next;
+    });
+  }
+
+  return { articles, loading, error, reload: loadArticles, refresh: refreshArticles, refreshSingle: refreshSingleArticle, updateTitle: updateArticleTitle };
 }
 
 /**
