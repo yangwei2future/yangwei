@@ -97,6 +97,7 @@ export default function Article() {
             <div className="mt-6 flex items-center justify-between text-sm text-muted-foreground">
               <time>
                 {new Date(article.date).toLocaleString("zh-CN", {
+                  timeZone: "Asia/Shanghai",
                   year: "numeric",
                   month: "long",
                   day: "numeric",

@@ -14,6 +14,22 @@ interface GitHubMarkdown {
   excerpt?: string;
 }
 
+function toBeijingISOString(): string {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "00";
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}+08:00`;
+}
+
 /**
  * Simple frontmatter parser (works in browser)
  */
@@ -79,7 +95,9 @@ export async function fetchMarkdownFromGitHub(url: string): Promise<Article> {
     // Extract metadata
     const metadata: GitHubMarkdown = {
       title: data.title || extractTitleFromContent(content) || "Untitled",
-      date: data.date || new Date().toISOString().split("T")[0],
+      date: (data.date && (data.date.includes("T") || data.date.includes(" ")))
+        ? data.date
+        : toBeijingISOString(),
       tags: Array.isArray(data.tags) ? data.tags : [],
       author: data.author || "yangwei",
       excerpt: data.excerpt || generateExcerpt(content),
