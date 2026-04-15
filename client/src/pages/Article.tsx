@@ -83,7 +83,7 @@ export default function Article() {
 
       {/* Article Header */}
       <section className="py-12 border-b border-border">
-        <div className="container max-w-2xl">
+        <div className="container max-w-4xl">
           <Link href="/articles" className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors mb-6">
             <ArrowLeft size={16} />
             返回文章列表
@@ -96,10 +96,13 @@ export default function Article() {
 
             <div className="mt-6 flex items-center justify-between text-sm text-muted-foreground">
               <time>
-                {new Date(article.date).toLocaleDateString("zh-CN", {
+                {new Date(article.date).toLocaleString("zh-CN", {
                   year: "numeric",
                   month: "long",
                   day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  second: "2-digit",
                 })}
               </time>
               <span>{article.author}</span>
@@ -124,7 +127,7 @@ export default function Article() {
 
       {/* Article Content */}
       <section className="py-12">
-        <div className="container max-w-2xl">
+        <div className="container max-w-4xl">
           <article className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-code:text-primary prose-pre:bg-accent">
             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={markdownComponents}>
               {article.content}
@@ -136,7 +139,7 @@ export default function Article() {
       {/* Related Articles */}
       {relatedArticles.length > 0 && (
         <section className="py-12 border-t border-border bg-accent/30">
-          <div className="container max-w-2xl">
+          <div className="container max-w-4xl">
             <h2 className="text-2xl font-bold text-foreground mb-6">
               相关文章
             </h2>
