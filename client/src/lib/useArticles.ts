@@ -64,8 +64,14 @@ export function useArticles() {
         };
       });
 
-      setArticles(articlesWithTs);
-      cacheArticles(articlesWithTs);
+      const sorted = [...articlesWithTs].sort((a, b) => {
+        const aTime = new Date(a.updatedAt ?? a.createdAt).getTime();
+        const bTime = new Date(b.updatedAt ?? b.createdAt).getTime();
+        return bTime - aTime;
+      });
+
+      setArticles(sorted);
+      cacheArticles(sorted);
     } catch (err) {
       setError(err instanceof Error ? err.message : "加载文章失败");
       console.error("Error loading articles:", err);

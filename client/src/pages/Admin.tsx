@@ -30,7 +30,7 @@ export default function Admin() {
   const [links, setLinks] = useState<ArticleLink[]>([]);
   const [loadingLinks, setLoadingLinks] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { articles, refresh, refreshSingle, updateTitle, toggleHidden } = useArticles();
+  const { articles, reload, refresh, refreshSingle, updateTitle, toggleHidden } = useArticles();
   const [syncing, setSyncing] = useState(false);
   const [syncingUrl, setSyncingUrl] = useState<string | null>(null);
   const [editingUrl, setEditingUrl] = useState<string | null>(null);
@@ -94,6 +94,7 @@ export default function Admin() {
       setNewUrl("");
       setNewTitle("");
       setSuccess("文章链接添加成功！");
+      reload();
     } catch (err) {
       setError(err instanceof Error ? err.message : "添加失败");
     } finally {
