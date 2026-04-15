@@ -187,15 +187,13 @@
   }
   
   blockquote {
-    border-left: 3px solid oklch(0.42 0.22 264);
-    padding-left: 1rem;
-    margin-left: 0;
-    margin-right: 0;
-    color: oklch(0.4 0.01 65);
-    background-color: oklch(0.97 0.001 286);
-    padding: 1rem;
-    padding-left: 1rem;
-    border-radius: 0.25rem;
+    border-left: 2px solid oklch(0.75 0.001 286);
+    padding: 0.1rem 0 0.1rem 1.25rem;
+    margin: 1.5rem 0;
+    color: oklch(0.45 0.01 65);
+    background: transparent;
+    font-style: italic;
+    border-radius: 0;
   }
   
   /* Prose styling for article content */
@@ -259,30 +257,76 @@
   /* Table styles */
   .prose table {
     width: 100%;
-    border-collapse: collapse;
-    margin-top: 1em;
-    margin-bottom: 1em;
-    overflow-x: auto;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 1.75em 0;
+    font-size: 0.9em;
+    border: 1px solid oklch(0.91 0.001 286);
+    border-radius: 0.5rem;
+    overflow: hidden;
   }
 
   .prose thead {
-    background-color: oklch(0.96 0.001 286);
+    background-color: oklch(0.975 0.001 286);
   }
 
   .prose th {
-    padding: 0.75rem;
+    padding: 0.65rem 1rem;
     text-align: left;
     font-weight: 600;
-    border-bottom: 2px solid oklch(0.42 0.22 264);
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: oklch(0.38 0.01 65);
+    border-bottom: 1px solid oklch(0.91 0.001 286);
   }
 
   .prose td {
-    padding: 0.75rem;
+    padding: 0.65rem 1rem;
+    color: oklch(0.22 0.01 65);
     border-bottom: 1px solid oklch(0.94 0.001 286);
+    vertical-align: top;
   }
 
-  .prose tbody tr:hover {
-    background-color: oklch(0.97 0.001 286);
+  .prose tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .prose tbody tr:hover td {
+    background-color: oklch(0.985 0.001 286);
+  }
+
+  /* Blockquote in prose */
+  .prose blockquote {
+    border-left: 2px solid oklch(0.75 0.001 286);
+    padding: 0.1rem 0 0.1rem 1.25rem;
+    margin: 1.5rem 0;
+    color: oklch(0.45 0.01 65);
+    background: transparent;
+    font-style: italic;
+    border-radius: 0;
+  }
+
+  .prose blockquote p {
+    margin: 0.4em 0;
+  }
+
+  /* Inline code */
+  .prose :not(pre) > code {
+    background-color: oklch(0.955 0.003 264);
+    color: oklch(0.38 0.18 264);
+    padding: 0.15em 0.45em;
+    border-radius: 0.3rem;
+    font-size: 0.875em;
+    font-weight: 500;
+    border: none;
+  }
+
+  /* Mark / highlight */
+  .prose mark {
+    background: oklch(0.96 0.12 95);
+    color: oklch(0.25 0.01 65);
+    padding: 0.05em 0.3em;
+    border-radius: 0.2em;
   }
 
   button:not(:disabled),
