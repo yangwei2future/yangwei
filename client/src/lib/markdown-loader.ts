@@ -72,7 +72,7 @@ function parseFrontmatter(content: string): { data: Record<string, any>; content
 /**
  * Fetch Markdown content from GitHub raw URL
  */
-export async function fetchMarkdownFromGitHub(url: string, customTitle?: string): Promise<Article> {
+export async function fetchMarkdownFromGitHub(url: string, customTitle?: string, fallbackDate?: string): Promise<Article> {
   try {
     // Convert GitHub URL to API URL
     const apiUrl = convertToApiUrl(url);
@@ -97,7 +97,7 @@ export async function fetchMarkdownFromGitHub(url: string, customTitle?: string)
       title: customTitle || data.title || extractTitleFromContent(content) || "Untitled",
       date: (data.date && (data.date.includes("T") || data.date.includes(" ")))
         ? data.date
-        : toBeijingISOString(),
+        : (fallbackDate || toBeijingISOString()),
       tags: Array.isArray(data.tags) ? data.tags : [],
       author: data.author || "杨卫",
       excerpt: data.excerpt || generateExcerpt(content),
@@ -200,14 +200,9 @@ function generateIdFromUrl(url: string): string {
  * Batch fetch multiple articles from GitHub URLs
  */
 export async function fetchArticlesFromGitHub(
-  entries: { url: string; title?: string }[]
+  entries: { url: string; title?: string; createdAt?: string }[]
 ): Promise<Article[]> {
-  const articles = await Promise.all(
-    entries.map((e) => fetchMarkdownFromGitHub(e.url, e.title))
-  );
-
-  // Sort by date descending
-  return articles.sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  return Promise.all(
+    entries.map((e) => fetchMarkdownFromGitHub(e.url, e.title, e.createdAt))
   );
 }
