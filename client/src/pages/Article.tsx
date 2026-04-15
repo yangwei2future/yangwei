@@ -5,7 +5,8 @@ import { useArticles } from "@/lib/useArticles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
+import { useState } from "react";
 import type { ComponentPropsWithoutRef } from "react";
 
 function makeHeading(Tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
@@ -33,7 +34,14 @@ const markdownComponents = {
 
 export default function Article() {
   const { id } = useParams<{ id: string }>();
-  const { articles, loading, error } = useArticles();
+  const { articles, loading, error, refresh } = useArticles();
+  const [syncing, setSyncing] = useState(false);
+
+  async function handleSync() {
+    setSyncing(true);
+    await refresh();
+    setSyncing(false);
+  }
 
   if (loading) {
     return (
@@ -95,17 +103,27 @@ export default function Article() {
             </h1>
 
             <div className="mt-6 flex items-center justify-between text-sm text-muted-foreground">
-              <time>
-                {new Date(article.date).toLocaleString("zh-CN", {
-                  timeZone: "Asia/Shanghai",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  second: "2-digit",
-                })}
-              </time>
+              <div className="flex items-center gap-3">
+                <time>
+                  {new Date(article.date).toLocaleString("zh-CN", {
+                    timeZone: "Asia/Shanghai",
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                  })}
+                </time>
+                <button
+                  onClick={handleSync}
+                  disabled={syncing}
+                  title="内容可能已更新，点击从 GitHub 拉取最新版本"
+                  className="text-muted-foreground/60 hover:text-primary transition-colors disabled:cursor-not-allowed"
+                >
+                  <RefreshCw size={14} className={syncing ? "animate-spin" : ""} />
+                </button>
+              </div>
               <span>{article.author}</span>
             </div>
 
