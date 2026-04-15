@@ -6,7 +6,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeHighlight from "rehype-highlight";
-import "highlight.js/styles/github-dark.css";
+import "highlight.js/styles/github.css";
 import { ArrowLeft, X, Copy, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { ComponentPropsWithoutRef, ReactElement } from "react";
@@ -33,18 +33,18 @@ function CodeBlock({ children }: ComponentPropsWithoutRef<"pre">) {
   }
 
   return (
-    <div className="my-4 rounded-lg overflow-hidden border border-white/10 bg-[#1e1e2e]">
-      <div className="flex items-center justify-between px-4 py-2 bg-[#16161e] border-b border-white/10">
-        <span className="text-xs font-mono text-white/40 select-none">{lang}</span>
+    <div className="my-4 rounded-lg overflow-hidden border border-[#e1e4e8]">
+      <div className="flex items-center justify-between px-4 py-2 bg-[#f6f8fa] border-b border-[#e1e4e8]">
+        <span className="text-xs font-mono text-[#57606a] select-none">{lang}</span>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/80 transition-colors"
+          className="flex items-center gap-1.5 text-xs text-[#57606a] hover:text-[#24292f] transition-colors"
         >
           {copied ? <Check size={13} /> : <Copy size={13} />}
           <span>{copied ? "已复制" : "复制"}</span>
         </button>
       </div>
-      <pre className="!m-0 !rounded-none !bg-transparent overflow-x-auto p-4 text-sm leading-relaxed">
+      <pre className="!m-0 !rounded-none !bg-[#ffffff] overflow-x-auto p-4 text-sm leading-relaxed">
         {children}
       </pre>
     </div>
