@@ -5,6 +5,8 @@ import { useArticles } from "@/lib/useArticles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github.css";
 import { ArrowLeft } from "lucide-react";
 import type { ComponentPropsWithoutRef } from "react";
 
@@ -130,7 +132,7 @@ export default function Article() {
       <section className="py-12">
         <div className="container max-w-4xl">
           <article className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-code:text-primary prose-pre:bg-accent">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]} components={markdownComponents}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeHighlight]} components={markdownComponents}>
               {article.content}
             </ReactMarkdown>
           </article>
