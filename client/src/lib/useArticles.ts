@@ -42,11 +42,13 @@ export function useArticles() {
         return;
       }
 
-      // Check cache first
+      // Check cache first, but filter out any hidden articles
       const cached = getCachedArticles();
       if (cached) {
+        const visibleIds = new Set(entries.map((e) => decodeURIComponent(e.url.split("/").pop()?.replace(".md", "") ?? "")));
+        const filteredCache = cached.filter((a) => visibleIds.has(a.id));
         console.log("Using cached articles");
-        setArticles(cached);
+        setArticles(filteredCache);
         setLoading(false);
         return;
       }
