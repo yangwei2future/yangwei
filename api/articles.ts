@@ -5,20 +5,32 @@ const OWNER = process.env.GITHUB_OWNER || "yangwei2future";
 const REPO = process.env.GITHUB_REPO || "yangwei";
 const FILE_PATH = "articles-config.json";
 
-async function getConfig(): Promise<{ urls: string[]; sha: string }> {
+interface ArticleEntry {
+  url: string;
+  title?: string;
+}
+
+async function getConfig(): Promise<{ entries: ArticleEntry[]; sha: string }> {
   const res = await fetch(
     `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE_PATH}`,
     { headers: { Authorization: `Bearer ${TOKEN}`, Accept: "application/json" } }
   );
-  if (res.status === 404) return { urls: [], sha: "" };
+  if (res.status === 404) return { entries: [], sha: "" };
   if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
   const data = await res.json();
   const content = Buffer.from(data.content, "base64").toString("utf-8");
-  return { urls: JSON.parse(content), sha: data.sha };
+  const parsed = JSON.parse(content);
+  // Backward compat: convert old string[] format
+  const entries: ArticleEntry[] = Array.isArray(parsed)
+    ? parsed.map((item: string | ArticleEntry) =>
+        typeof item === "string" ? { url: item } : item
+      )
+    : [];
+  return { entries, sha: data.sha };
 }
 
-async function saveConfig(urls: string[], sha: string): Promise<void> {
-  const content = Buffer.from(JSON.stringify(urls, null, 2)).toString("base64");
+async function saveConfig(entries: ArticleEntry[], sha: string): Promise<void> {
+  const content = Buffer.from(JSON.stringify(entries, null, 2)).toString("base64");
   const body: Record<string, unknown> = {
     message: "Update article links",
     content,
@@ -44,24 +56,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     if (req.method === "GET") {
-      const { urls } = await getConfig();
-      return res.status(200).json(urls);
+      const { entries } = await getConfig();
+      return res.status(200).json(entries);
     }
 
     if (req.method === "POST") {
-      const { url } = req.body;
+      const { url, title } = req.body;
       if (!url) return res.status(400).json({ error: "Missing url" });
-      const { urls, sha } = await getConfig();
-      if (urls.includes(url)) return res.status(409).json({ error: "此链接已存在" });
-      await saveConfig([...urls, url], sha);
+      const { entries, sha } = await getConfig();
+      if (entries.some((e) => e.url === url)) return res.status(409).json({ error: "此链接已存在" });
+      const entry: ArticleEntry = { url };
+      if (title?.trim()) entry.title = title.trim();
+      await saveConfig([...entries, entry], sha);
       return res.status(200).json({ ok: true });
     }
 
     if (req.method === "DELETE") {
       const { url } = req.body;
       if (!url) return res.status(400).json({ error: "Missing url" });
-      const { urls, sha } = await getConfig();
-      await saveConfig(urls.filter((u) => u !== url), sha);
+      const { entries, sha } = await getConfig();
+      await saveConfig(entries.filter((e) => e.url !== url), sha);
       return res.status(200).json({ ok: true });
     }
 

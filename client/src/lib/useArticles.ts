@@ -31,9 +31,9 @@ export function useArticles() {
       setLoading(true);
       setError(null);
 
-      const urls: string[] = await fetch("/api/articles").then((r) => r.json());
+      const entries: { url: string; title?: string }[] = await fetch("/api/articles").then((r) => r.json());
 
-      if (urls.length === 0) {
+      if (entries.length === 0) {
         setArticles([]);
         setLoading(false);
         return;
@@ -49,7 +49,7 @@ export function useArticles() {
       }
 
       console.log("Fetching articles from GitHub");
-      const fetchedArticles = await fetchArticlesFromGitHub(urls);
+      const fetchedArticles = await fetchArticlesFromGitHub(entries);
 
       setArticles(fetchedArticles);
       cacheArticles(fetchedArticles);
@@ -82,9 +82,9 @@ export function preloadArticles(): void {
 
   fetch("/api/articles")
     .then((r) => r.json())
-    .then((urls: string[]) => {
-      if (urls.length === 0) return;
-      return fetchArticlesFromGitHub(urls).then((articles) => {
+    .then((entries: { url: string; title?: string }[]) => {
+      if (entries.length === 0) return;
+      return fetchArticlesFromGitHub(entries).then((articles) => {
         cacheArticles(articles);
       });
     })

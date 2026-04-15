@@ -72,7 +72,7 @@ function parseFrontmatter(content: string): { data: Record<string, any>; content
 /**
  * Fetch Markdown content from GitHub raw URL
  */
-export async function fetchMarkdownFromGitHub(url: string): Promise<Article> {
+export async function fetchMarkdownFromGitHub(url: string, customTitle?: string): Promise<Article> {
   try {
     // Convert GitHub URL to API URL
     const apiUrl = convertToApiUrl(url);
@@ -94,7 +94,7 @@ export async function fetchMarkdownFromGitHub(url: string): Promise<Article> {
 
     // Extract metadata
     const metadata: GitHubMarkdown = {
-      title: data.title || extractTitleFromContent(content) || "Untitled",
+      title: customTitle || data.title || extractTitleFromContent(content) || "Untitled",
       date: (data.date && (data.date.includes("T") || data.date.includes(" ")))
         ? data.date
         : toBeijingISOString(),
@@ -199,10 +199,10 @@ function generateIdFromUrl(url: string): string {
  * Batch fetch multiple articles from GitHub URLs
  */
 export async function fetchArticlesFromGitHub(
-  urls: string[]
+  entries: { url: string; title?: string }[]
 ): Promise<Article[]> {
   const articles = await Promise.all(
-    urls.map((url) => fetchMarkdownFromGitHub(url))
+    entries.map((e) => fetchMarkdownFromGitHub(e.url, e.title))
   );
 
   // Sort by date descending

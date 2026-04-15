@@ -25,6 +25,7 @@ export default function Admin() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [newUrl, setNewUrl] = useState("");
+  const [newTitle, setNewTitle] = useState("");
   const [links, setLinks] = useState<ArticleLink[]>([]);
   const [loadingLinks, setLoadingLinks] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -67,10 +68,11 @@ export default function Admin() {
     }
     setSubmitting(true);
     try {
-      await addArticleLink(newUrl.trim());
+      await addArticleLink(newUrl.trim(), newTitle.trim() || undefined);
       const updated = await getArticleLinks();
       setLinks(updated);
       setNewUrl("");
+      setNewTitle("");
       setSuccess("文章链接添加成功！");
     } catch (err) {
       setError(err instanceof Error ? err.message : "添加失败");
@@ -161,6 +163,11 @@ export default function Admin() {
                 onChange={(e) => setNewUrl(e.target.value)}
                 placeholder="https://github.com/username/repo/blob/branch/path/to/article.md"
               />
+              <Input
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="自定义标题（选填，不填则自动从文章提取）"
+              />
               {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
               {success && <Alert><AlertDescription>{success}</AlertDescription></Alert>}
               <Button type="submit" disabled={submitting}>
@@ -189,7 +196,10 @@ export default function Admin() {
               <div className="space-y-3">
                 {links.map((link) => (
                   <div key={link.url} className="flex items-center justify-between p-3 border rounded-sm">
-                    <p className="text-sm font-medium truncate flex-1 min-w-0">{link.url}</p>
+                    <div className="flex-1 min-w-0">
+                      {link.title && <p className="text-sm font-medium truncate">{link.title}</p>}
+                      <p className="text-xs text-muted-foreground truncate">{link.url}</p>
+                    </div>
                     <Button
                       variant="destructive"
                       size="sm"

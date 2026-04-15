@@ -13,6 +13,7 @@ function clearArticleCache() {
 
 export interface ArticleLink {
   url: string;
+  title?: string;
   addedAt: string;
 }
 
@@ -20,18 +21,18 @@ export interface ArticleLink {
  * Get stored article links from server
  */
 export async function getArticleLinks(): Promise<ArticleLink[]> {
-  const urls: string[] = await fetch("/api/articles").then((r) => r.json());
-  return urls.map((url) => ({ url, addedAt: "" }));
+  const entries: { url: string; title?: string }[] = await fetch("/api/articles").then((r) => r.json());
+  return entries.map((e) => ({ url: e.url, title: e.title, addedAt: "" }));
 }
 
 /**
  * Add a new article link
  */
-export async function addArticleLink(url: string): Promise<void> {
+export async function addArticleLink(url: string, title?: string): Promise<void> {
   const res = await fetch("/api/articles", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url }),
+    body: JSON.stringify({ url, title }),
   });
   if (!res.ok) {
     const { error } = await res.json();
