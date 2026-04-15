@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lock, LogOut, Loader2 } from "lucide-react";
+import { Lock, LogOut, Loader2, RefreshCw } from "lucide-react";
 import {
   verifyPassword,
   isAuthenticated,
@@ -17,6 +17,7 @@ import {
   removeArticleLink,
   type ArticleLink,
 } from "@/lib/article-links";
+import { useArticles } from "@/lib/useArticles";
 
 export default function Admin() {
   const [, setLocation] = useLocation();
@@ -29,6 +30,22 @@ export default function Admin() {
   const [links, setLinks] = useState<ArticleLink[]>([]);
   const [loadingLinks, setLoadingLinks] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const { refresh } = useArticles();
+  const [syncing, setSyncing] = useState(false);
+
+  async function handleSync() {
+    setSyncing(true);
+    setSuccess("");
+    setError("");
+    try {
+      await refresh();
+      setSuccess("已从 GitHub 同步最新内容");
+    } catch {
+      setError("同步失败，请稍后重试");
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   useEffect(() => {
     if (authenticated) {
@@ -143,10 +160,16 @@ export default function Admin() {
       <div className="container max-w-4xl py-12">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">文章链接管理</h1>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            退出
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleSync} disabled={syncing}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+              同步内容
+            </Button>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              退出
+            </Button>
+          </div>
         </div>
 
         <Card className="mb-8">
