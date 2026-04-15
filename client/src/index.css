@@ -44,16 +44,19 @@
 
 :root {
   /* Modern Minimalism Design System */
-  /* Primary: Deep Blue for links and interactive elements */
-  --primary: oklch(0.42 0.22 264);
-  --primary-foreground: oklch(1 0 0);
-  --sidebar-primary: oklch(0.42 0.22 264);
-  --sidebar-primary-foreground: oklch(1 0 0);
+  /* Primary: Near-black for buttons; blue accent kept for links */
+  --primary: oklch(0.13 0.005 264);
+  --primary-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.13 0.005 264);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
   --chart-1: oklch(0.42 0.22 264);
   --chart-2: oklch(0.52 0.18 264);
   --chart-3: oklch(0.62 0.14 264);
   --chart-4: oklch(0.72 0.1 264);
   --chart-5: oklch(0.82 0.06 264);
+  /* Link accent color (separate from primary) */
+  --link: oklch(0.46 0.15 255);
+  --link-hover: oklch(0.35 0.18 255);
   
   --radius: 0.25rem;
   
@@ -81,14 +84,14 @@
   /* Subtle borders */
   --border: oklch(0.94 0.001 286);
   --input: oklch(0.94 0.001 286);
-  --ring: oklch(0.42 0.22 264);
-  
+  --ring: oklch(0.13 0.005 264);
+
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.11 0.01 65);
   --sidebar-accent: oklch(0.96 0.001 286);
   --sidebar-accent-foreground: oklch(0.11 0.01 65);
   --sidebar-border: oklch(0.94 0.001 286);
-  --sidebar-ring: oklch(0.42 0.22 264);
+  --sidebar-ring: oklch(0.13 0.005 264);
 }
 
 .dark {
@@ -176,14 +179,18 @@
   }
   
   a {
-    color: oklch(0.42 0.22 264);
+    color: var(--link);
     text-decoration: none;
-    position: relative;
-    transition: color 0.2s ease-in-out;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+    transition: color 0.15s ease, text-decoration-color 0.15s ease;
+    text-decoration-color: transparent;
   }
-  
+
   a:hover {
-    color: oklch(0.52 0.18 264);
+    color: var(--link-hover);
+    text-decoration: underline;
+    text-decoration-color: oklch(0.35 0.18 255 / 40%);
   }
   
   blockquote {
@@ -293,6 +300,21 @@
 
   .prose tbody tr:hover td {
     background-color: oklch(0.985 0.001 286);
+  }
+
+  /* Links in prose */
+  .prose a {
+    color: var(--link);
+    text-decoration: underline;
+    text-decoration-color: oklch(0.46 0.15 255 / 30%);
+    text-underline-offset: 3px;
+    font-weight: 500;
+    transition: color 0.15s ease, text-decoration-color 0.15s ease;
+  }
+
+  .prose a:hover {
+    color: var(--link-hover);
+    text-decoration-color: oklch(0.35 0.18 255 / 70%);
   }
 
   /* Blockquote in prose */
