@@ -30,7 +30,7 @@ export default function Admin() {
   const [links, setLinks] = useState<ArticleLink[]>([]);
   const [loadingLinks, setLoadingLinks] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { refresh, refreshSingle, updateTitle } = useArticles();
+  const { articles, refresh, refreshSingle, updateTitle } = useArticles();
   const [syncing, setSyncing] = useState(false);
   const [syncingUrl, setSyncingUrl] = useState<string | null>(null);
   const [editingUrl, setEditingUrl] = useState<string | null>(null);
@@ -255,23 +255,30 @@ export default function Admin() {
                           value={editingTitle}
                           onChange={(e) => setEditingTitle(e.target.value)}
                           onKeyDown={(e) => { if (e.key === "Enter") handleSaveTitle(link.url); if (e.key === "Escape") setEditingUrl(null); }}
-                          placeholder="自定义标题"
+                          placeholder="自定义标题（留空则从文章自动提取）"
                           className="h-7 text-sm"
                         />
                         <button onClick={() => handleSaveTitle(link.url)} className="text-green-600 hover:text-green-700"><Check size={15} /></button>
                         <button onClick={() => setEditingUrl(null)} className="text-muted-foreground hover:text-foreground"><X size={15} /></button>
                       </div>
-                    ) : (
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        {link.title
-                          ? <p className="text-sm font-medium truncate">{link.title}</p>
-                          : <p className="text-sm text-muted-foreground truncate italic">未设置标题</p>
-                        }
-                        <button onClick={() => { setEditingUrl(link.url); setEditingTitle(link.title || ""); }} className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors">
-                          <Pencil size={12} />
-                        </button>
-                      </div>
-                    )}
+                    ) : (() => {
+                        const articleTitle = articles.find((a) =>
+                          link.url.includes(encodeURIComponent(a.id)) || link.url.endsWith(a.id + ".md")
+                        )?.title;
+                        const displayTitle = articleTitle || link.title;
+                        return (
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            {displayTitle
+                              ? <p className="text-sm font-medium truncate">{displayTitle}</p>
+                              : <p className="text-sm text-muted-foreground truncate italic">加载中...</p>
+                            }
+                            <button onClick={() => { setEditingUrl(link.url); setEditingTitle(link.title || ""); }} className="shrink-0 text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+                              <Pencil size={12} />
+                            </button>
+                          </div>
+                        );
+                      })()
+                    }
                     {/* URL + timestamps */}
                     <p className="text-xs text-muted-foreground truncate">{link.url}</p>
                     <div className="flex gap-4">
