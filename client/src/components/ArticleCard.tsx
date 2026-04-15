@@ -26,7 +26,7 @@ export default function ArticleCard({
 }: ArticleCardProps) {
   return (
     <Link href={`/article/${id}`} className="block group">
-      <article className="p-6 bg-card rounded-sm border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150">
+      <article className="p-6 bg-card rounded-lg border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150">
         {/* Date */}
         <time className="text-sm text-muted-foreground">
           {new Date(date).toLocaleDateString("zh-CN", {
@@ -52,7 +52,7 @@ export default function ArticleCard({
             {tags.map((tag) => (
               <span
                 key={tag}
-                className="inline-block px-2 py-1 text-xs bg-accent text-accent-foreground rounded-sm"
+                className="inline-block px-2 py-1 text-xs bg-accent text-accent-foreground rounded-lg"
               >
                 {tag}
               </span>

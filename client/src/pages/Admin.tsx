@@ -218,7 +218,7 @@ export default function Admin() {
             ) : (
               <div className="space-y-3">
                 {links.map((link) => (
-                  <div key={link.url} className="flex items-center justify-between p-3 border rounded-sm">
+                  <div key={link.url} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex-1 min-w-0">
                       {link.title && <p className="text-sm font-medium truncate">{link.title}</p>}
                       <p className="text-xs text-muted-foreground truncate">{link.url}</p>

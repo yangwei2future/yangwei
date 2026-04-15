@@ -181,7 +181,7 @@ export default function Article() {
                 {article.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="inline-block px-2 py-1 text-xs bg-accent text-accent-foreground rounded-sm"
+                    className="inline-block px-2 py-1 text-xs bg-accent text-accent-foreground rounded-lg"
                   >
                     {tag}
                   </span>
@@ -232,7 +232,7 @@ export default function Article() {
             </h2>
             <div className="space-y-4">
               {relatedArticles.map((related) => (
-                <Link key={related.id} href={`/article/${related.id}`} className="block p-4 rounded-sm border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150 group">
+                <Link key={related.id} href={`/article/${related.id}`} className="block p-4 rounded-lg border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150 group">
                   <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
                     {related.title}
                   </h3>

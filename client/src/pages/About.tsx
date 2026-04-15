@@ -108,7 +108,7 @@ export default function About() {
             {skills.map((skill) => (
               <span
                 key={skill}
-                className="px-4 py-2 bg-accent text-accent-foreground rounded-sm text-sm font-medium"
+                className="px-4 py-2 bg-accent text-accent-foreground rounded-lg text-sm font-medium"
               >
                 {skill}
               </span>
@@ -183,7 +183,7 @@ export default function About() {
                     {project.metrics.map((metric, i) => (
                       <span
                         key={i}
-                        className="px-3 py-1 bg-accent/50 text-accent-foreground rounded-sm text-xs font-medium"
+                        className="px-3 py-1 bg-accent/50 text-accent-foreground rounded-lg text-xs font-medium"
                       >
                         {metric}
                       </span>
@@ -206,7 +206,7 @@ export default function About() {
           <div className="space-y-3">
             <a
               href="mailto:ywei_20@126.com"
-              className="flex items-center gap-3 p-4 rounded-sm border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150 group"
+              className="flex items-center gap-3 p-4 rounded-lg border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150 group"
             >
               <Mail size={20} className="text-primary" />
               <div>
@@ -223,7 +223,7 @@ export default function About() {
               href="https://github.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-3 p-4 rounded-sm border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150 group"
+              className="flex items-center gap-3 p-4 rounded-lg border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150 group"
             >
               <Github size={20} className="text-primary" />
               <div className="flex-1">
@@ -237,7 +237,7 @@ export default function About() {
               <ExternalLink size={16} className="text-muted-foreground" />
             </a>
 
-            <div className="flex items-center gap-3 p-4 rounded-sm border border-border">
+            <div className="flex items-center gap-3 p-4 rounded-lg border border-border">
               <Mail size={20} className="text-primary" />
               <div>
                 <p className="font-medium text-foreground">微信</p>
@@ -245,7 +245,7 @@ export default function About() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-4 rounded-sm border border-border">
+            <div className="flex items-center gap-3 p-4 rounded-lg border border-border">
               <Mail size={20} className="text-primary" />
               <div>
                 <p className="font-medium text-foreground">电话</p>

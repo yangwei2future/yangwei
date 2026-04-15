@@ -58,7 +58,7 @@
   --link: oklch(0.46 0.15 255);
   --link-hover: oklch(0.35 0.18 255);
   
-  --radius: 0.25rem;
+  --radius: 0.625rem;
   
   /* Clean white background with deep gray text */
   --background: oklch(1 0 0);

@@ -71,7 +71,7 @@ export default function Articles() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setSelectedTag(null)}
-              className={`px-3 py-1 text-sm rounded-sm transition-colors ${
+              className={`px-3 py-1 text-sm rounded-lg transition-colors ${
                 selectedTag === null
                   ? "bg-primary text-primary-foreground"
                   : "bg-accent text-accent-foreground hover:bg-border"
@@ -83,7 +83,7 @@ export default function Articles() {
               <button
                 key={tag}
                 onClick={() => setSelectedTag(tag)}
-                className={`px-3 py-1 text-sm rounded-sm transition-colors ${
+                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
                   selectedTag === tag
                     ? "bg-primary text-primary-foreground"
                     : "bg-accent text-accent-foreground hover:bg-border"

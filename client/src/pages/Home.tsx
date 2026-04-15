@@ -153,7 +153,7 @@ export default function Home() {
 
           {/* View All Articles Link */}
           <div className="text-center">
-            <Link href="/articles" className="inline-block px-6 py-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors border border-primary rounded-sm hover:bg-primary/5">
+            <Link href="/articles" className="inline-block px-6 py-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors border border-primary rounded-lg hover:bg-primary/5">
               查看所有文章 →
             </Link>
           </div>

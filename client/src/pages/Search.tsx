@@ -83,7 +83,7 @@ export default function Search() {
                 value={query}
                 onChange={handleInputChange}
                 placeholder="搜索标题、内容或标签..."
-                className="w-full px-4 py-3 border border-border rounded-sm bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <SearchIcon
                 size={20}
@@ -92,7 +92,7 @@ export default function Search() {
             </div>
             <button
               type="submit"
-              className="px-6 py-3 bg-primary text-primary-foreground rounded-sm hover:opacity-90 transition-opacity font-medium"
+              className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity font-medium"
             >
               搜索
             </button>
