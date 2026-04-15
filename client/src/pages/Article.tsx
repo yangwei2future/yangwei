@@ -6,16 +6,49 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeHighlight from "rehype-highlight";
-import "highlight.js/styles/github.css";
-import { ArrowLeft, X } from "lucide-react";
+import "highlight.js/styles/github-dark.css";
+import { ArrowLeft, X, Copy, Check } from "lucide-react";
 import { useState, useEffect } from "react";
-import type { ComponentPropsWithoutRef } from "react";
+import type { ComponentPropsWithoutRef, ReactElement } from "react";
 
 function makeHeading(Tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
   return function Heading({ children, ...props }: ComponentPropsWithoutRef<typeof Tag>) {
     const id = slugifyHeading(extractTextFromChildren(children));
     return <Tag id={id} {...props}>{children}</Tag>;
   };
+}
+
+function CodeBlock({ children }: ComponentPropsWithoutRef<"pre">) {
+  const [copied, setCopied] = useState(false);
+
+  const codeEl = children as ReactElement<{ className?: string; children?: string }>;
+  const className = codeEl?.props?.className ?? "";
+  const lang = className.replace("hljs", "").replace(/language-/g, "").trim() || "plaintext";
+  const rawText = codeEl?.props?.children ?? "";
+
+  function handleCopy() {
+    navigator.clipboard.writeText(typeof rawText === "string" ? rawText : "");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div className="my-4 rounded-lg overflow-hidden border border-white/10 bg-[#1e1e2e]">
+      <div className="flex items-center justify-between px-4 py-2 bg-[#16161e] border-b border-white/10">
+        <span className="text-xs font-mono text-white/40 select-none">{lang}</span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1.5 text-xs text-white/40 hover:text-white/80 transition-colors"
+        >
+          {copied ? <Check size={13} /> : <Copy size={13} />}
+          <span>{copied ? "已复制" : "复制"}</span>
+        </button>
+      </div>
+      <pre className="!m-0 !rounded-none !bg-transparent overflow-x-auto p-4 text-sm leading-relaxed">
+        {children}
+      </pre>
+    </div>
+  );
 }
 
 const headingComponents = {
@@ -48,6 +81,7 @@ export default function Article() {
 
   const markdownComponents = {
     ...headingComponents,
+    pre: CodeBlock,
     img({ src, alt }: { src?: string; alt?: string }) {
       return (
         <img
