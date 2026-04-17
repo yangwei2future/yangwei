@@ -14,6 +14,8 @@ interface ArticleCardProps {
   title: string;
   excerpt: string;
   date: string;
+  createdAt?: string;
+  updatedAt?: string;
   tags?: string[];
 }
 
@@ -22,14 +24,17 @@ export default function ArticleCard({
   title,
   excerpt,
   date,
+  createdAt,
+  updatedAt,
   tags = [],
 }: ArticleCardProps) {
+  const displayDate = updatedAt ?? createdAt ?? date;
   return (
     <Link href={`/article/${id}`} className="block group">
       <article className="p-6 bg-card rounded-lg border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150">
         {/* Date */}
         <time className="text-sm text-muted-foreground">
-          {new Date(date).toLocaleDateString("zh-CN", {
+          {new Date(displayDate).toLocaleDateString("zh-CN", {
             year: "numeric",
             month: "long",
             day: "numeric",
