@@ -14,7 +14,7 @@ interface ArticleCardProps {
   title: string;
   excerpt: string;
   date: string;
-  createdAt?: string;
+  updatedAt?: string;
   tags?: string[];
 }
 
@@ -23,10 +23,10 @@ export default function ArticleCard({
   title,
   excerpt,
   date,
-  createdAt,
+  updatedAt,
   tags = [],
 }: ArticleCardProps) {
-  const displayDate = createdAt ?? date;
+  const displayDate = updatedAt ?? date;
   return (
     <Link href={`/article/${id}`} className="block group">
       <article className="p-6 bg-card rounded-lg border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150">
