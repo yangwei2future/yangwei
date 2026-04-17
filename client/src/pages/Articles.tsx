@@ -109,7 +109,6 @@ export default function Articles() {
                   excerpt={article.excerpt}
                   date={article.date}
                   createdAt={article.createdAt}
-                  updatedAt={article.updatedAt}
                   tags={article.tags}
                 />
               ))}

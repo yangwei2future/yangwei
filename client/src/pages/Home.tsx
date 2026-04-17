@@ -144,7 +144,6 @@ export default function Home() {
                   excerpt={article.excerpt}
                   date={article.date}
                   createdAt={article.createdAt}
-                  updatedAt={article.updatedAt}
                   tags={article.tags}
                 />
               ))
