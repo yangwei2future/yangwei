@@ -46,6 +46,7 @@ export default function Admin() {
   const [catIcon, setCatIcon] = useState("📁");
   const [catColor, setCatColor] = useState("gray");
   const [catSaving, setCatSaving] = useState(false);
+  const [catError, setCatError] = useState("");
 
   async function handleSync() {
     setSyncing(true);
@@ -409,7 +410,7 @@ export default function Admin() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>分类管理</CardTitle>
-              <Button size="sm" variant="outline" onClick={() => { setCatFormUrl("new"); setCatLabel(""); setCatIcon("📁"); setCatColor("gray"); }}>
+              <Button size="sm" variant="outline" onClick={() => { setCatFormUrl("new"); setCatLabel(""); setCatIcon("📁"); setCatColor("gray"); setCatError(""); }}>
                 + 新增分类
               </Button>
             </div>
@@ -447,23 +448,28 @@ export default function Admin() {
                     </span>
                   )}
                 </div>
+                {catError && (
+                  <p className="text-xs text-destructive bg-destructive/10 px-2 py-1 rounded">{catError}</p>
+                )}
                 <div className="flex gap-2">
                   <Button
                     size="sm"
                     disabled={!catLabel.trim() || catSaving}
                     onClick={async () => {
                       if (!catLabel.trim()) return;
+                      setCatError("");
                       setCatSaving(true);
                       try {
                         if (catFormUrl === "new") {
-                          const id = catLabel.trim().toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-") + "-" + Date.now().toString(36);
+                          const slug = catLabel.trim().toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8);
+                          const id = (slug || "cat") + "-" + Date.now().toString(36);
                           await addCategory({ id, label: catLabel.trim(), icon: catIcon, color: catColor });
                         } else {
-                          await updateCategoryDef(catFormUrl, { label: catLabel.trim(), icon: catIcon, color: catColor });
+                          await updateCategoryDef(catFormUrl!, { label: catLabel.trim(), icon: catIcon, color: catColor });
                         }
                         setCatFormUrl(null);
                       } catch (e) {
-                        setError(e instanceof Error ? e.message : "保存失败");
+                        setCatError(e instanceof Error ? e.message : "保存失败，请重试");
                       } finally {
                         setCatSaving(false);
                       }
@@ -472,7 +478,7 @@ export default function Admin() {
                     {catSaving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
                     保存
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => setCatFormUrl(null)}>取消</Button>
+                  <Button size="sm" variant="outline" onClick={() => { setCatFormUrl(null); setCatError(""); }}>取消</Button>
                 </div>
               </div>
             )}
@@ -492,7 +498,7 @@ export default function Admin() {
                         size="sm"
                         variant="ghost"
                         className="h-7 px-2 text-xs"
-                        onClick={() => { setCatFormUrl(cat.id); setCatLabel(cat.label); setCatIcon(cat.icon); setCatColor(cat.color); }}
+                        onClick={() => { setCatFormUrl(cat.id); setCatLabel(cat.label); setCatIcon(cat.icon); setCatColor(cat.color); setCatError(""); }}
                       >
                         <Pencil size={12} className="mr-1" />编辑
                       </Button>
