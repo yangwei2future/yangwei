@@ -110,6 +110,7 @@ export default function Articles() {
                   date={article.date}
                   createdAt={article.createdAt}
                   updatedAt={article.updatedAt}
+                  category={article.category}
                   tags={article.tags}
                 />
               ))}

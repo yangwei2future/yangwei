@@ -11,6 +11,7 @@ interface ArticleEntry {
   createdAt?: string;
   updatedAt?: string;
   hidden?: boolean;
+  category?: string;
 }
 
 async function getConfig(): Promise<{ entries: ArticleEntry[]; sha: string }> {
@@ -75,17 +76,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === "PATCH") {
-      const { url, title, hidden } = req.body || {};
+      const { url, title, hidden, category } = req.body || {};
       const { entries, sha } = await getConfig();
       const updatedAt = new Date().toISOString();
       if (url) {
-        // Update single entry: updatedAt + optional title/hidden
+        // Update single entry: updatedAt + optional title/hidden/category
         await saveConfig(
           entries.map((e) => {
             if (e.url !== url) return e;
             const updated: ArticleEntry = { ...e, updatedAt };
             if (title !== undefined) updated.title = title.trim() || undefined;
             if (hidden !== undefined) updated.hidden = hidden;
+            if (category !== undefined) updated.category = category || undefined;
             return updated;
           }),
           sha

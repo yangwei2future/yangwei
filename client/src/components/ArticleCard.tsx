@@ -1,4 +1,5 @@
 import { Link } from "wouter";
+import { getCategoryById } from "@/lib/categories";
 
 /**
  * ArticleCard Component
@@ -16,6 +17,7 @@ interface ArticleCardProps {
   date: string;
   createdAt?: string;
   updatedAt?: string;
+  category?: string;
   tags?: string[];
 }
 
@@ -26,9 +28,11 @@ export default function ArticleCard({
   date,
   createdAt,
   updatedAt,
+  category,
   tags = [],
 }: ArticleCardProps) {
   const displayDate = updatedAt ?? createdAt ?? date;
+  const cat = getCategoryById(category);
   return (
     <Link href={`/article/${id}`} className="block group">
       <article className="p-6 bg-card rounded-lg border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150">
@@ -45,6 +49,14 @@ export default function ArticleCard({
         <h3 className="mt-2 text-xl font-bold text-foreground group-hover:text-primary transition-colors">
           {title}
         </h3>
+
+        {/* Category */}
+        {cat && (
+          <span className={`inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 text-xs font-medium rounded-full ${cat.badgeClass}`}>
+            <span>{cat.icon}</span>
+            <span>{cat.label}</span>
+          </span>
+        )}
 
         {/* Excerpt */}
         <p className="mt-3 text-sm text-muted-foreground line-clamp-2">

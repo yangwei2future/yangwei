@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lock, LogOut, Loader2, RefreshCw, Pencil, Check, X, EyeOff, Eye } from "lucide-react";
+import { Lock, LogOut, Loader2, RefreshCw, Pencil, Check, X, EyeOff, Eye, Tag } from "lucide-react";
 import {
   verifyPassword,
   isAuthenticated,
@@ -18,6 +18,7 @@ import {
   type ArticleLink,
 } from "@/lib/article-links";
 import { useArticles } from "@/lib/useArticles";
+import { CATEGORIES, getCategoryById } from "@/lib/categories";
 
 export default function Admin() {
   const [, setLocation] = useLocation();
@@ -30,11 +31,12 @@ export default function Admin() {
   const [links, setLinks] = useState<ArticleLink[]>([]);
   const [loadingLinks, setLoadingLinks] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { articles, reload, refresh, refreshSingle, updateTitle, toggleHidden } = useArticles();
+  const { articles, reload, refresh, refreshSingle, updateTitle, updateCategory, toggleHidden } = useArticles();
   const [syncing, setSyncing] = useState(false);
   const [syncingUrl, setSyncingUrl] = useState<string | null>(null);
   const [editingUrl, setEditingUrl] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
+  const [editingCategoryUrl, setEditingCategoryUrl] = useState<string | null>(null);
 
   async function handleSync() {
     setSyncing(true);
@@ -283,6 +285,42 @@ export default function Admin() {
                         );
                       })()
                     }
+                    {/* Category selector */}
+                    <div className="flex items-center gap-2">
+                      {editingCategoryUrl === link.url ? (
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <button
+                            onClick={async () => { await updateCategory(link.url, ""); const updated = await getArticleLinks(); setLinks(updated); setEditingCategoryUrl(null); }}
+                            className="px-2 py-0.5 text-xs rounded-full border border-dashed border-muted-foreground/40 text-muted-foreground hover:bg-muted"
+                          >
+                            无分类
+                          </button>
+                          {CATEGORIES.map((cat) => (
+                            <button
+                              key={cat.id}
+                              onClick={async () => { await updateCategory(link.url, cat.id); const updated = await getArticleLinks(); setLinks(updated); setEditingCategoryUrl(null); }}
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${cat.badgeClass} hover:opacity-80`}
+                            >
+                              <span>{cat.icon}</span><span>{cat.label}</span>
+                            </button>
+                          ))}
+                          <button onClick={() => setEditingCategoryUrl(null)} className="text-muted-foreground hover:text-foreground ml-1"><X size={12} /></button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setEditingCategoryUrl(link.url)}
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                        >
+                          {(() => {
+                            const cat = getCategoryById(link.category);
+                            return cat
+                              ? <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-medium ${cat.badgeClass}`}><span>{cat.icon}</span><span>{cat.label}</span></span>
+                              : <span className="inline-flex items-center gap-1"><Tag size={11} />设置分类</span>;
+                          })()}
+                        </button>
+                      )}
+                    </div>
+
                     {/* URL + timestamps */}
                     <p className="text-xs text-muted-foreground truncate">{link.url}</p>
                     <div className="flex gap-4">

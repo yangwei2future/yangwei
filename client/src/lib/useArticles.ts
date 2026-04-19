@@ -31,7 +31,7 @@ export function useArticles() {
       setLoading(true);
       setError(null);
 
-      const allEntries: { url: string; title?: string; createdAt?: string; updatedAt?: string; hidden?: boolean }[] =
+      const allEntries: { url: string; title?: string; createdAt?: string; updatedAt?: string; hidden?: boolean; category?: string }[] =
         await fetch("/api/articles").then((r) => r.json());
       // Filter out hidden articles for public view
       const entries = allEntries.filter((e) => !e.hidden);
@@ -54,6 +54,7 @@ export function useArticles() {
               ...article,
               createdAt: entry?.createdAt ?? article.createdAt,
               updatedAt: entry?.updatedAt ?? article.updatedAt,
+              category: entry?.category ?? article.category,
             };
           })
           .sort((a, b) => {
@@ -77,6 +78,7 @@ export function useArticles() {
           ...article,
           createdAt: entry?.createdAt || new Date().toISOString(),
           updatedAt: entry?.updatedAt,
+          category: entry?.category,
         };
       });
 
@@ -175,7 +177,21 @@ export function useArticles() {
     }
   }
 
-  return { articles, loading, error, reload: loadArticles, refresh: refreshArticles, refreshSingle: refreshSingleArticle, updateTitle: updateArticleTitle, toggleHidden };
+  async function updateArticleCategory(url: string, category: string) {
+    await fetch("/api/articles", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, category }),
+    });
+    const id = decodeURIComponent(url.split("/").pop()?.replace(".md", "") ?? "");
+    setArticles((prev) => {
+      const next = prev.map((a) => (a.id === id ? { ...a, category: category || undefined } : a));
+      cacheArticles(next);
+      return next;
+    });
+  }
+
+  return { articles, loading, error, reload: loadArticles, refresh: refreshArticles, refreshSingle: refreshSingleArticle, updateTitle: updateArticleTitle, updateCategory: updateArticleCategory, toggleHidden };
 }
 
 /**
