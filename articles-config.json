@@ -27,9 +27,14 @@
   },
   {
     "url": "https://github.com/yangwei2future/interview/blob/main/ai-share/%E6%97%A5%E5%B8%B8%E5%AD%A6%E4%B9%A0/%E7%AC%AC%E5%8D%81%E7%AB%A0%EF%BC%9A%E6%A8%A1%E5%9E%8B%E4%B8%8A%E4%B8%8B%E6%96%87%E5%8D%8F%E8%AE%AE%EF%BC%88MCP%EF%BC%89/%E7%AC%AC%E5%8D%81%E7%AB%A0%EF%BC%9A%E6%A8%A1%E5%9E%8B%E4%B8%8A%E4%B8%8B%E6%96%87%E5%8D%8F%E8%AE%AE%EF%BC%88MCP%EF%BC%89.md",
-    "updatedAt": "2026-04-19T14:26:43.769Z",
+    "updatedAt": "2026-04-19T14:58:34.020Z",
     "title": "模型上下文协议（MCP）",
-    "category": "ai"
+    "category": "ai",
+    "categories": [
+      "ai",
+      "backend",
+      "tools"
+    ]
   },
   {
     "url": "https://github.com/yangwei2future/interview/blob/main/ai-share/%E6%97%A5%E5%B8%B8%E5%AD%A6%E4%B9%A0/%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%85%A5Redis%E6%8C%87%E5%8D%97/%E6%9C%8D%E5%8A%A1%E6%8E%A5%E5%85%A5Redis%E6%8C%87%E5%8D%97.md",
