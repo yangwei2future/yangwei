@@ -286,40 +286,42 @@ export default function Admin() {
                       })()
                     }
                     {/* Category selector */}
-                    <div className="flex items-center gap-2">
-                      {editingCategoryUrl === link.url ? (
-                        <div className="flex items-center gap-1 flex-wrap">
+                    {editingCategoryUrl === link.url ? (
+                      <div className="flex items-center gap-1.5 flex-wrap py-1">
+                        <span className="text-xs text-muted-foreground mr-1">选择分类：</span>
+                        <button
+                          onClick={async () => { await updateCategory(link.url, ""); const updated = await getArticleLinks(); setLinks(updated); setEditingCategoryUrl(null); }}
+                          className="px-2.5 py-1 text-xs rounded-full border border-dashed border-muted-foreground/40 text-muted-foreground hover:bg-muted"
+                        >
+                          无分类
+                        </button>
+                        {CATEGORIES.map((cat) => (
                           <button
-                            onClick={async () => { await updateCategory(link.url, ""); const updated = await getArticleLinks(); setLinks(updated); setEditingCategoryUrl(null); }}
-                            className="px-2 py-0.5 text-xs rounded-full border border-dashed border-muted-foreground/40 text-muted-foreground hover:bg-muted"
+                            key={cat.id}
+                            onClick={async () => { await updateCategory(link.url, cat.id); const updated = await getArticleLinks(); setLinks(updated); setEditingCategoryUrl(null); }}
+                            className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full ${cat.badgeClass} hover:opacity-80`}
                           >
-                            无分类
+                            <span>{cat.icon}</span><span>{cat.label}</span>
                           </button>
-                          {CATEGORIES.map((cat) => (
-                            <button
-                              key={cat.id}
-                              onClick={async () => { await updateCategory(link.url, cat.id); const updated = await getArticleLinks(); setLinks(updated); setEditingCategoryUrl(null); }}
-                              className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${cat.badgeClass} hover:opacity-80`}
-                            >
-                              <span>{cat.icon}</span><span>{cat.label}</span>
-                            </button>
-                          ))}
-                          <button onClick={() => setEditingCategoryUrl(null)} className="text-muted-foreground hover:text-foreground ml-1"><X size={12} /></button>
-                        </div>
-                      ) : (
+                        ))}
+                        <button onClick={() => setEditingCategoryUrl(null)} className="text-muted-foreground hover:text-foreground ml-1"><X size={13} /></button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground">分类：</span>
                         <button
                           onClick={() => setEditingCategoryUrl(link.url)}
-                          className="inline-flex items-center gap-1 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                          className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity"
                         >
                           {(() => {
                             const cat = getCategoryById(link.category);
                             return cat
-                              ? <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-medium ${cat.badgeClass}`}><span>{cat.icon}</span><span>{cat.label}</span></span>
-                              : <span className="inline-flex items-center gap-1"><Tag size={11} />设置分类</span>;
+                              ? <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full font-medium ${cat.badgeClass}`}><span>{cat.icon}</span><span>{cat.label}</span></span>
+                              : <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full border border-dashed border-muted-foreground/40 text-muted-foreground"><Tag size={11} /><span>未设置</span></span>;
                           })()}
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    )}
 
                     {/* URL + timestamps */}
                     <p className="text-xs text-muted-foreground truncate">{link.url}</p>
