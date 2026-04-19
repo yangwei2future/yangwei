@@ -1,0 +1,44 @@
+[
+  {
+    "id": "ai",
+    "label": "AI",
+    "icon": "🤖",
+    "color": "purple"
+  },
+  {
+    "id": "backend",
+    "label": "后端",
+    "icon": "⚙️",
+    "color": "blue"
+  },
+  {
+    "id": "frontend",
+    "label": "前端",
+    "icon": "🎨",
+    "color": "pink"
+  },
+  {
+    "id": "tools",
+    "label": "工具",
+    "icon": "🛠️",
+    "color": "orange"
+  },
+  {
+    "id": "architecture",
+    "label": "架构",
+    "icon": "📐",
+    "color": "cyan"
+  },
+  {
+    "id": "essay",
+    "label": "随笔",
+    "icon": "📝",
+    "color": "green"
+  },
+  {
+    "id": "cat-mo5w0jm5",
+    "label": "数据库",
+    "icon": "📁",
+    "color": "gray"
+  }
+]
