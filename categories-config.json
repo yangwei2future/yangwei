@@ -40,5 +40,11 @@
     "label": "数据库",
     "icon": "📁",
     "color": "gray"
+  },
+  {
+    "id": "cat-mo5w4qvj",
+    "label": "配置",
+    "icon": "📝",
+    "color": "gray"
   }
 ]
