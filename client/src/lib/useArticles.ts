@@ -55,6 +55,11 @@ export function useArticles() {
               createdAt: entry?.createdAt ?? article.createdAt,
               updatedAt: entry?.updatedAt ?? article.updatedAt,
             };
+          })
+          .sort((a, b) => {
+            const aTime = new Date(a.updatedAt ?? a.createdAt).getTime();
+            const bTime = new Date(b.updatedAt ?? b.createdAt).getTime();
+            return bTime - aTime;
           });
         console.log("Using cached articles");
         setArticles(filteredCache);
