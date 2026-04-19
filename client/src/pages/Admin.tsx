@@ -427,14 +427,22 @@ export default function Admin() {
               {catFormUrl !== null && (
                 <div className="p-3 border rounded-lg space-y-3 bg-muted/40">
                   <p className="text-sm font-medium">{catFormUrl === "new" ? "新增分类" : "编辑分类"}</p>
-                  <div className="flex gap-2">
-                    <div className="w-16">
-                      <Label className="text-xs">图标</Label>
-                      <Input value={catIcon} onChange={(e) => setCatIcon(e.target.value)} className="mt-1 h-8 text-center text-lg" maxLength={4} />
-                    </div>
-                    <div className="flex-1">
-                      <Label className="text-xs">名称</Label>
-                      <Input value={catLabel} onChange={(e) => setCatLabel(e.target.value)} placeholder="分类名称" className="mt-1 h-8" />
+                  <div>
+                    <Label className="text-xs">名称</Label>
+                    <Input value={catLabel} onChange={(e) => setCatLabel(e.target.value)} placeholder="分类名称" className="mt-1 h-8" />
+                  </div>
+                  <div>
+                    <Label className="text-xs">图标</Label>
+                    <div className="flex flex-wrap gap-1 mt-1 p-2 border rounded-md bg-background max-h-32 overflow-y-auto">
+                      {["🤖","⚙️","🎨","🛠️","📐","📝","🚀","💡","🔥","⭐","🌟","💎","🎯","📊","📈","🔬","🧪","🏗️","🌐","💻","📱","🎮","🎵","📚","✏️","🔑","🔒","🌈","🦋","🐉"].map((emoji) => (
+                        <button
+                          key={emoji}
+                          onClick={() => setCatIcon(emoji)}
+                          className={`w-8 h-8 flex items-center justify-center rounded text-base transition-all ${catIcon === emoji ? "bg-primary/20 ring-2 ring-primary scale-110" : "hover:bg-muted"}`}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
                     </div>
                   </div>
                   <div>
