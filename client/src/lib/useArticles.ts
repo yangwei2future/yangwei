@@ -46,7 +46,16 @@ export function useArticles() {
       const cached = getCachedArticles();
       if (cached) {
         const visibleIds = new Set(entries.map((e) => decodeURIComponent(e.url.split("/").pop()?.replace(".md", "") ?? "")));
-        const filteredCache = cached.filter((a) => visibleIds.has(a.id));
+        const filteredCache = cached
+          .filter((a) => visibleIds.has(a.id))
+          .map((article) => {
+            const entry = entries.find((e) => e.url.includes(encodeURIComponent(article.id)) || e.url.endsWith(article.id + ".md"));
+            return {
+              ...article,
+              createdAt: entry?.createdAt ?? article.createdAt,
+              updatedAt: entry?.updatedAt ?? article.updatedAt,
+            };
+          });
         console.log("Using cached articles");
         setArticles(filteredCache);
         setLoading(false);
