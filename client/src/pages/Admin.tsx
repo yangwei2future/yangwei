@@ -18,7 +18,8 @@ import {
   type ArticleLink,
 } from "@/lib/article-links";
 import { useArticles } from "@/lib/useArticles";
-import { CATEGORIES, getCategoryById } from "@/lib/categories";
+import { useCategories } from "@/contexts/CategoriesContext";
+import { COLOR_OPTIONS, getBadgeClass } from "@/lib/categories";
 
 export default function Admin() {
   const [, setLocation] = useLocation();
@@ -38,6 +39,13 @@ export default function Admin() {
   const [editingTitle, setEditingTitle] = useState("");
   const [editingCategoryUrl, setEditingCategoryUrl] = useState<string | null>(null);
   const [pendingCategories, setPendingCategories] = useState<string[]>([]);
+  const { categories, addCategory, updateCategory: updateCategoryDef, deleteCategory } = useCategories();
+  // Category management form
+  const [catFormUrl, setCatFormUrl] = useState<string | null>(null); // null=closed, "new"=add, id=edit
+  const [catLabel, setCatLabel] = useState("");
+  const [catIcon, setCatIcon] = useState("📁");
+  const [catColor, setCatColor] = useState("gray");
+  const [catSaving, setCatSaving] = useState(false);
 
   async function handleSync() {
     setSyncing(true);
@@ -290,7 +298,7 @@ export default function Admin() {
                     {editingCategoryUrl === link.url ? (
                       <div className="space-y-2 py-1">
                         <div className="flex flex-wrap gap-1.5">
-                          {CATEGORIES.map((cat) => {
+                          {categories.map((cat) => {
                             const selected = pendingCategories.includes(cat.id);
                             return (
                               <button
@@ -300,7 +308,7 @@ export default function Admin() {
                                 )}
                                 className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full border-2 transition-all ${
                                   selected
-                                    ? `${cat.badgeClass} border-current`
+                                    ? `${getBadgeClass(cat.color)} border-current`
                                     : "border-transparent bg-muted text-muted-foreground hover:bg-accent"
                                 }`}
                               >
@@ -328,17 +336,14 @@ export default function Admin() {
                     ) : (
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-xs text-muted-foreground">分类：</span>
-                        {(link.categories ?? []).length > 0
-                          ? (link.categories!).map((id) => {
-                              const cat = getCategoryById(id);
-                              return cat ? (
-                                <span key={id} className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full font-medium ${cat.badgeClass}`}>
-                                  <span>{cat.icon}</span><span>{cat.label}</span>
-                                </span>
-                              ) : null;
-                            })
-                          : null
-                        }
+                        {(link.categories ?? []).map((id) => {
+                          const cat = categories.find((c) => c.id === id);
+                          return cat ? (
+                            <span key={id} className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full font-medium ${getBadgeClass(cat.color)}`}>
+                              <span>{cat.icon}</span><span>{cat.label}</span>
+                            </span>
+                          ) : null;
+                        })}
                         <button
                           onClick={() => { setEditingCategoryUrl(link.url); setPendingCategories(link.categories ?? []); }}
                           className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border border-dashed border-muted-foreground/40 text-muted-foreground hover:bg-muted"
@@ -390,6 +395,117 @@ export default function Admin() {
                         onClick={() => handleRemoveLink(link.url)}
                       >
                         删除
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* ── 分类管理 ── */}
+        <Card className="mt-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>分类管理</CardTitle>
+              <Button size="sm" variant="outline" onClick={() => { setCatFormUrl("new"); setCatLabel(""); setCatIcon("📁"); setCatColor("gray"); }}>
+                + 新增分类
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {/* Add / Edit form */}
+            {catFormUrl !== null && (
+              <div className="p-3 border rounded-lg space-y-3 bg-muted/40">
+                <p className="text-sm font-medium">{catFormUrl === "new" ? "新增分类" : "编辑分类"}</p>
+                <div className="flex gap-2">
+                  <div className="w-16">
+                    <Label className="text-xs">图标</Label>
+                    <Input value={catIcon} onChange={(e) => setCatIcon(e.target.value)} className="mt-1 h-8 text-center text-lg" maxLength={4} />
+                  </div>
+                  <div className="flex-1">
+                    <Label className="text-xs">名称</Label>
+                    <Input value={catLabel} onChange={(e) => setCatLabel(e.target.value)} placeholder="分类名称" className="mt-1 h-8" />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs">颜色</Label>
+                  <div className="flex flex-wrap gap-1.5 mt-1">
+                    {COLOR_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        title={opt.label}
+                        onClick={() => setCatColor(opt.id)}
+                        className={`w-6 h-6 rounded-full ${opt.swatch} ring-offset-1 transition-all ${catColor === opt.id ? "ring-2 ring-foreground scale-110" : "hover:scale-105"}`}
+                      />
+                    ))}
+                  </div>
+                  {catLabel && (
+                    <span className={`inline-flex items-center gap-1 mt-2 px-2 py-0.5 text-xs font-medium rounded-full ${getBadgeClass(catColor)}`}>
+                      <span>{catIcon}</span><span>{catLabel}</span>
+                    </span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    disabled={!catLabel.trim() || catSaving}
+                    onClick={async () => {
+                      if (!catLabel.trim()) return;
+                      setCatSaving(true);
+                      try {
+                        if (catFormUrl === "new") {
+                          const id = catLabel.trim().toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-") + "-" + Date.now().toString(36);
+                          await addCategory({ id, label: catLabel.trim(), icon: catIcon, color: catColor });
+                        } else {
+                          await updateCategoryDef(catFormUrl, { label: catLabel.trim(), icon: catIcon, color: catColor });
+                        }
+                        setCatFormUrl(null);
+                      } catch (e) {
+                        setError(e instanceof Error ? e.message : "保存失败");
+                      } finally {
+                        setCatSaving(false);
+                      }
+                    }}
+                  >
+                    {catSaving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                    保存
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setCatFormUrl(null)}>取消</Button>
+                </div>
+              </div>
+            )}
+
+            {/* Category list */}
+            {categories.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">暂无分类，点击"新增分类"添加</p>
+            ) : (
+              <div className="space-y-1.5">
+                {categories.map((cat) => (
+                  <div key={cat.id} className="flex items-center justify-between p-2 rounded-lg border">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${getBadgeClass(cat.color)}`}>
+                      <span>{cat.icon}</span><span>{cat.label}</span>
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => { setCatFormUrl(cat.id); setCatLabel(cat.label); setCatIcon(cat.icon); setCatColor(cat.color); }}
+                      >
+                        <Pencil size={12} className="mr-1" />编辑
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                        onClick={async () => {
+                          if (!confirm(`确认删除分类「${cat.label}」？已分配此分类的文章不受影响。`)) return;
+                          await deleteCategory(cat.id);
+                        }}
+                      >
+                        <X size={12} className="mr-1" />删除
                       </Button>
                     </div>
                   </div>

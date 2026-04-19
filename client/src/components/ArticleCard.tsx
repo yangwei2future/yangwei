@@ -1,14 +1,6 @@
 import { Link } from "wouter";
-import { getCategoryById } from "@/lib/categories";
-
-/**
- * ArticleCard Component
- * 
- * Design: Modern Minimalism
- * - Subtle shadow and hover effects
- * - Clean typography with clear hierarchy
- * - Responsive grid layout
- */
+import { useCategories } from "@/contexts/CategoriesContext";
+import { getBadgeClass } from "@/lib/categories";
 
 interface ArticleCardProps {
   id: string;
@@ -31,8 +23,10 @@ export default function ArticleCard({
   categories,
   tags = [],
 }: ArticleCardProps) {
+  const { getCategoryById } = useCategories();
   const displayDate = updatedAt ?? createdAt ?? date;
-  const cats = (categories ?? []).map(getCategoryById).filter(Boolean) as import("@/lib/categories").Category[];
+  const cats = (categories ?? []).map(getCategoryById).filter(Boolean) as NonNullable<ReturnType<typeof getCategoryById>>[];
+
   return (
     <Link href={`/article/${id}`} className="block group">
       <article className="p-6 bg-card rounded-lg border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150">
@@ -54,7 +48,7 @@ export default function ArticleCard({
         {cats.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1.5">
             {cats.map((cat) => (
-              <span key={cat.id} className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${cat.badgeClass}`}>
+              <span key={cat.id} className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${getBadgeClass(cat.color)}`}>
                 <span>{cat.icon}</span>
                 <span>{cat.label}</span>
               </span>

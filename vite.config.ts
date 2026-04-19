@@ -237,6 +237,85 @@ function vitePluginArticlesApi(): Plugin {
   };
 }
 
+function vitePluginCategoriesApi(): Plugin {
+  let env: Record<string, string> = {};
+  const DEFAULT_CATEGORIES = [
+    { id: "ai", label: "AI", icon: "🤖", color: "purple" },
+    { id: "backend", label: "后端", icon: "⚙️", color: "blue" },
+    { id: "frontend", label: "前端", icon: "🎨", color: "pink" },
+    { id: "tools", label: "工具", icon: "🛠️", color: "orange" },
+    { id: "architecture", label: "架构", icon: "📐", color: "cyan" },
+    { id: "essay", label: "随笔", icon: "📝", color: "green" },
+  ];
+
+  return {
+    name: "categories-api",
+    config(_, { mode }) { env = loadEnv(mode, process.cwd(), ""); },
+    configureServer(server: ViteDevServer) {
+      const token = () => env.GITHUB_TOKEN || env.github_token || "";
+      const owner = () => env.GITHUB_OWNER || "yangwei2future";
+      const repo = () => env.GITHUB_REPO || "yangwei";
+      const filePath = "categories-config.json";
+      const proxyUrl = () => env.HTTPS_PROXY || env.https_proxy || env.HTTP_PROXY || env.http_proxy;
+
+      const githubFetch = (url: string, init?: RequestInit) => {
+        const dispatcher = proxyUrl() ? new ProxyAgent(proxyUrl()!) : undefined;
+        return undiciFetch(url, { ...init, headers: { Authorization: `Bearer ${token()}`, "Content-Type": "application/json", ...(init?.headers as Record<string, string>) }, dispatcher } as Parameters<typeof undiciFetch>[1]);
+      };
+
+      const getConfig = async () => {
+        const r = await githubFetch(`https://api.github.com/repos/${owner()}/${repo()}/contents/${filePath}`);
+        if ((r as any).status === 404) return { categories: DEFAULT_CATEGORIES, sha: "" };
+        if (!(r as any).ok) throw new Error(`GitHub error: ${(r as any).status}`);
+        const data = await (r as any).json();
+        return { categories: JSON.parse(Buffer.from(data.content, "base64").toString("utf-8")), sha: data.sha };
+      };
+
+      const saveConfig = async (categories: unknown[], sha: string) => {
+        const content = Buffer.from(JSON.stringify(categories, null, 2)).toString("base64");
+        const body: Record<string, unknown> = { message: "Update categories", content, committer: { name: "Blog Admin", email: "admin@blog.com" } };
+        if (sha) body.sha = sha;
+        const r = await githubFetch(`https://api.github.com/repos/${owner()}/${repo()}/contents/${filePath}`, { method: "PUT", body: JSON.stringify(body) });
+        if (!(r as any).ok) throw new Error(`Save failed: ${(r as any).status}`);
+      };
+
+      server.middlewares.use("/api/categories", async (req, res) => {
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Content-Type", "application/json");
+        try {
+          if (req.method === "GET") {
+            const { categories } = await getConfig();
+            return res.end(JSON.stringify(categories));
+          }
+          let body = "";
+          await new Promise<void>((resolve) => { req.on("data", (c) => (body += c)); req.on("end", resolve); });
+          const parsed = body ? JSON.parse(body) : {};
+
+          if (req.method === "POST") {
+            const { categories, sha } = await getConfig();
+            if (categories.some((c: any) => c.id === parsed.id)) { res.writeHead(409); return res.end(JSON.stringify({ error: "分类ID已存在" })); }
+            await saveConfig([...categories, { id: parsed.id, label: parsed.label, icon: parsed.icon || "📁", color: parsed.color || "gray" }], sha);
+            return res.end(JSON.stringify({ ok: true }));
+          }
+          if (req.method === "PATCH") {
+            const { categories, sha } = await getConfig();
+            await saveConfig(categories.map((c: any) => c.id !== parsed.id ? c : { ...c, ...(parsed.label !== undefined && { label: parsed.label }), ...(parsed.icon !== undefined && { icon: parsed.icon }), ...(parsed.color !== undefined && { color: parsed.color }) }), sha);
+            return res.end(JSON.stringify({ ok: true }));
+          }
+          if (req.method === "DELETE") {
+            const { categories, sha } = await getConfig();
+            await saveConfig(categories.filter((c: any) => c.id !== parsed.id), sha);
+            return res.end(JSON.stringify({ ok: true }));
+          }
+        } catch (err) {
+          res.writeHead(500);
+          res.end(JSON.stringify({ error: String(err) }));
+        }
+      });
+    },
+  };
+}
+
 /**
  * Vite plugin to collect browser debug logs
  * - POST /__manus__/logs: Browser sends logs, written directly to files
@@ -326,6 +405,7 @@ const plugins = [
   vitePluginManusRuntime(),
   vitePluginGitHubProxy(),
   vitePluginArticlesApi(),
+  vitePluginCategoriesApi(),
   vitePluginManusDebugCollector(),
 ];
 
