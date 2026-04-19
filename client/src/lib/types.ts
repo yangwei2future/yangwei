@@ -12,7 +12,7 @@ export interface Article {
   author: string;
   createdAt: string;
   updatedAt?: string;
-  category?: string;
+  categories?: string[];
 }
 
 export interface BlogConfig {

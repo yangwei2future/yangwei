@@ -17,7 +17,7 @@ export interface ArticleLink {
   createdAt?: string;
   updatedAt?: string;
   hidden?: boolean;
-  category?: string;
+  categories?: string[];
 }
 
 /**
@@ -25,7 +25,7 @@ export interface ArticleLink {
  */
 export async function getArticleLinks(): Promise<ArticleLink[]> {
   const entries: ArticleLink[] = await fetch("/api/articles").then((r) => r.json());
-  return entries.map((e) => ({ url: e.url, title: e.title, createdAt: e.createdAt, updatedAt: e.updatedAt, hidden: e.hidden, category: e.category }));
+  return entries.map((e) => ({ url: e.url, title: e.title, createdAt: e.createdAt, updatedAt: e.updatedAt, hidden: e.hidden, categories: e.categories }));
 }
 
 /**

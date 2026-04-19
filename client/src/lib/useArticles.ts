@@ -31,7 +31,7 @@ export function useArticles() {
       setLoading(true);
       setError(null);
 
-      const allEntries: { url: string; title?: string; createdAt?: string; updatedAt?: string; hidden?: boolean; category?: string }[] =
+      const allEntries: { url: string; title?: string; createdAt?: string; updatedAt?: string; hidden?: boolean; categories?: string[] }[] =
         await fetch("/api/articles").then((r) => r.json());
       // Filter out hidden articles for public view
       const entries = allEntries.filter((e) => !e.hidden);
@@ -54,7 +54,7 @@ export function useArticles() {
               ...article,
               createdAt: entry?.createdAt ?? article.createdAt,
               updatedAt: entry?.updatedAt ?? article.updatedAt,
-              category: entry?.category ?? article.category,
+              categories: entry?.categories ?? article.categories,
             };
           })
           .sort((a, b) => {
@@ -78,7 +78,7 @@ export function useArticles() {
           ...article,
           createdAt: entry?.createdAt || new Date().toISOString(),
           updatedAt: entry?.updatedAt,
-          category: entry?.category,
+          categories: entry?.categories,
         };
       });
 
@@ -177,15 +177,15 @@ export function useArticles() {
     }
   }
 
-  async function updateArticleCategory(url: string, category: string) {
+  async function updateArticleCategory(url: string, categories: string[]) {
     await fetch("/api/articles", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url, category }),
+      body: JSON.stringify({ url, categories }),
     });
     const id = decodeURIComponent(url.split("/").pop()?.replace(".md", "") ?? "");
     setArticles((prev) => {
-      const next = prev.map((a) => (a.id === id ? { ...a, category: category || undefined } : a));
+      const next = prev.map((a) => (a.id === id ? { ...a, categories: categories.length > 0 ? categories : undefined } : a));
       cacheArticles(next);
       return next;
     });

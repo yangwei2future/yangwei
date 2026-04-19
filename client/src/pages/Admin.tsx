@@ -37,6 +37,7 @@ export default function Admin() {
   const [editingUrl, setEditingUrl] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingCategoryUrl, setEditingCategoryUrl] = useState<string | null>(null);
+  const [pendingCategories, setPendingCategories] = useState<string[]>([]);
 
   async function handleSync() {
     setSyncing(true);
@@ -287,38 +288,62 @@ export default function Admin() {
                     }
                     {/* Category selector */}
                     {editingCategoryUrl === link.url ? (
-                      <div className="flex items-center gap-1.5 flex-wrap py-1">
-                        <span className="text-xs text-muted-foreground mr-1">选择分类：</span>
-                        <button
-                          onClick={async () => { await updateCategory(link.url, ""); const updated = await getArticleLinks(); setLinks(updated); setEditingCategoryUrl(null); }}
-                          className="px-2.5 py-1 text-xs rounded-full border border-dashed border-muted-foreground/40 text-muted-foreground hover:bg-muted"
-                        >
-                          无分类
-                        </button>
-                        {CATEGORIES.map((cat) => (
+                      <div className="space-y-2 py-1">
+                        <div className="flex flex-wrap gap-1.5">
+                          {CATEGORIES.map((cat) => {
+                            const selected = pendingCategories.includes(cat.id);
+                            return (
+                              <button
+                                key={cat.id}
+                                onClick={() => setPendingCategories((prev) =>
+                                  selected ? prev.filter((id) => id !== cat.id) : [...prev, cat.id]
+                                )}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full border-2 transition-all ${
+                                  selected
+                                    ? `${cat.badgeClass} border-current`
+                                    : "border-transparent bg-muted text-muted-foreground hover:bg-accent"
+                                }`}
+                              >
+                                <span>{cat.icon}</span><span>{cat.label}</span>
+                                {selected && <Check size={10} />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div className="flex items-center gap-2">
                           <button
-                            key={cat.id}
-                            onClick={async () => { await updateCategory(link.url, cat.id); const updated = await getArticleLinks(); setLinks(updated); setEditingCategoryUrl(null); }}
-                            className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full ${cat.badgeClass} hover:opacity-80`}
+                            onClick={async () => {
+                              await updateCategory(link.url, pendingCategories);
+                              const updated = await getArticleLinks();
+                              setLinks(updated);
+                              setEditingCategoryUrl(null);
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs bg-primary text-primary-foreground rounded-full hover:opacity-90"
                           >
-                            <span>{cat.icon}</span><span>{cat.label}</span>
+                            <Check size={11} />确认
                           </button>
-                        ))}
-                        <button onClick={() => setEditingCategoryUrl(null)} className="text-muted-foreground hover:text-foreground ml-1"><X size={13} /></button>
+                          <button onClick={() => setEditingCategoryUrl(null)} className="text-xs text-muted-foreground hover:text-foreground">取消</button>
+                        </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-xs text-muted-foreground">分类：</span>
+                        {(link.categories ?? []).length > 0
+                          ? (link.categories!).map((id) => {
+                              const cat = getCategoryById(id);
+                              return cat ? (
+                                <span key={id} className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full font-medium ${cat.badgeClass}`}>
+                                  <span>{cat.icon}</span><span>{cat.label}</span>
+                                </span>
+                              ) : null;
+                            })
+                          : null
+                        }
                         <button
-                          onClick={() => setEditingCategoryUrl(link.url)}
-                          className="inline-flex items-center gap-1 hover:opacity-80 transition-opacity"
+                          onClick={() => { setEditingCategoryUrl(link.url); setPendingCategories(link.categories ?? []); }}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border border-dashed border-muted-foreground/40 text-muted-foreground hover:bg-muted"
                         >
-                          {(() => {
-                            const cat = getCategoryById(link.category);
-                            return cat
-                              ? <span className={`inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full font-medium ${cat.badgeClass}`}><span>{cat.icon}</span><span>{cat.label}</span></span>
-                              : <span className="inline-flex items-center gap-1 px-2.5 py-1 text-xs rounded-full border border-dashed border-muted-foreground/40 text-muted-foreground"><Tag size={11} /><span>未设置</span></span>;
-                          })()}
+                          <Tag size={10} />{(link.categories ?? []).length > 0 ? "编辑" : "设置分类"}
                         </button>
                       </div>
                     )}

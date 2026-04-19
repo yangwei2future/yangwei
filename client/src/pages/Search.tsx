@@ -120,7 +120,7 @@ export default function Search() {
                         date={article.date}
                         createdAt={article.createdAt}
                         updatedAt={article.updatedAt}
-                        category={article.category}
+                        categories={article.categories}
                         tags={article.tags}
                       />
                     ))}
