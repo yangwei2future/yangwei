@@ -46,5 +46,10 @@
     "createdAt": "2026-04-18T03:15:34.928Z",
     "title": "Redis 核心知识",
     "updatedAt": "2026-04-18T04:49:21.192Z"
+  },
+  {
+    "url": "https://github.com/yangwei2future/interview/blob/main/src/database/mysql-index.md",
+    "createdAt": "2026-04-19T13:06:26.023Z",
+    "title": "MySQL 索引原理"
   }
 ]
