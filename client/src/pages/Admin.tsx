@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lock, LogOut, Loader2, RefreshCw, Pencil, Check, X, EyeOff, Eye, Tag } from "lucide-react";
+import { Lock, LogOut, Loader2, RefreshCw, Pencil, Check, X, EyeOff, Eye, Tag, FolderOpen } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   verifyPassword,
   isAuthenticated,
@@ -41,6 +42,7 @@ export default function Admin() {
   const [pendingCategories, setPendingCategories] = useState<string[]>([]);
   const { categories, addCategory, updateCategory: updateCategoryDef, deleteCategory } = useCategories();
   // Category management form
+  const [catDialogOpen, setCatDialogOpen] = useState(false);
   const [catFormUrl, setCatFormUrl] = useState<string | null>(null); // null=closed, "new"=add, id=edit
   const [catLabel, setCatLabel] = useState("");
   const [catIcon, setCatIcon] = useState("📁");
@@ -205,6 +207,10 @@ export default function Admin() {
             <Button variant="outline" onClick={handleSync} disabled={syncing}>
               <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
               同步内容
+            </Button>
+            <Button variant="outline" onClick={() => { setCatDialogOpen(true); setCatFormUrl(null); setCatError(""); }}>
+              <FolderOpen className="h-4 w-4 mr-2" />
+              分类管理
             </Button>
             <Button variant="outline" onClick={handleLogout}>
               <LogOut className="h-4 w-4 mr-2" />
@@ -405,121 +411,115 @@ export default function Admin() {
           </CardContent>
         </Card>
 
-        {/* ── 分类管理 ── */}
-        <Card className="mt-8">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>分类管理</CardTitle>
-              <Button size="sm" variant="outline" onClick={() => { setCatFormUrl("new"); setCatLabel(""); setCatIcon("📁"); setCatColor("gray"); setCatError(""); }}>
-                + 新增分类
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {/* Add / Edit form */}
-            {catFormUrl !== null && (
-              <div className="p-3 border rounded-lg space-y-3 bg-muted/40">
-                <p className="text-sm font-medium">{catFormUrl === "new" ? "新增分类" : "编辑分类"}</p>
-                <div className="flex gap-2">
-                  <div className="w-16">
-                    <Label className="text-xs">图标</Label>
-                    <Input value={catIcon} onChange={(e) => setCatIcon(e.target.value)} className="mt-1 h-8 text-center text-lg" maxLength={4} />
-                  </div>
-                  <div className="flex-1">
-                    <Label className="text-xs">名称</Label>
-                    <Input value={catLabel} onChange={(e) => setCatLabel(e.target.value)} placeholder="分类名称" className="mt-1 h-8" />
-                  </div>
-                </div>
-                <div>
-                  <Label className="text-xs">颜色</Label>
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    {COLOR_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.id}
-                        title={opt.label}
-                        onClick={() => setCatColor(opt.id)}
-                        className={`w-6 h-6 rounded-full ${opt.swatch} ring-offset-1 transition-all ${catColor === opt.id ? "ring-2 ring-foreground scale-110" : "hover:scale-105"}`}
-                      />
-                    ))}
-                  </div>
-                  {catLabel && (
-                    <span className={`inline-flex items-center gap-1 mt-2 px-2 py-0.5 text-xs font-medium rounded-full ${getBadgeClass(catColor)}`}>
-                      <span>{catIcon}</span><span>{catLabel}</span>
-                    </span>
-                  )}
-                </div>
-                {catError && (
-                  <p className="text-xs text-destructive bg-destructive/10 px-2 py-1 rounded">{catError}</p>
-                )}
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    disabled={!catLabel.trim() || catSaving}
-                    onClick={async () => {
-                      if (!catLabel.trim()) return;
-                      setCatError("");
-                      setCatSaving(true);
-                      try {
-                        if (catFormUrl === "new") {
-                          const slug = catLabel.trim().toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8);
-                          const id = (slug || "cat") + "-" + Date.now().toString(36);
-                          await addCategory({ id, label: catLabel.trim(), icon: catIcon, color: catColor });
-                        } else {
-                          await updateCategoryDef(catFormUrl!, { label: catLabel.trim(), icon: catIcon, color: catColor });
-                        }
-                        setCatFormUrl(null);
-                      } catch (e) {
-                        setCatError(e instanceof Error ? e.message : "保存失败，请重试");
-                      } finally {
-                        setCatSaving(false);
-                      }
-                    }}
-                  >
-                    {catSaving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
-                    保存
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => { setCatFormUrl(null); setCatError(""); }}>取消</Button>
-                </div>
+        {/* ── 分类管理 Dialog ── */}
+        <Dialog open={catDialogOpen} onOpenChange={(open) => { setCatDialogOpen(open); if (!open) { setCatFormUrl(null); setCatError(""); } }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <div className="flex items-center justify-between pr-6">
+                <DialogTitle>分类管理</DialogTitle>
+                <Button size="sm" variant="outline" onClick={() => { setCatFormUrl("new"); setCatLabel(""); setCatIcon("📁"); setCatColor("gray"); setCatError(""); }}>
+                  + 新增分类
+                </Button>
               </div>
-            )}
-
-            {/* Category list */}
-            {categories.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">暂无分类，点击"新增分类"添加</p>
-            ) : (
-              <div className="space-y-1.5">
-                {categories.map((cat) => (
-                  <div key={cat.id} className="flex items-center justify-between p-2 rounded-lg border">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${getBadgeClass(cat.color)}`}>
-                      <span>{cat.icon}</span><span>{cat.label}</span>
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 px-2 text-xs"
-                        onClick={() => { setCatFormUrl(cat.id); setCatLabel(cat.label); setCatIcon(cat.icon); setCatColor(cat.color); setCatError(""); }}
-                      >
-                        <Pencil size={12} className="mr-1" />编辑
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 px-2 text-xs text-destructive hover:text-destructive"
-                        onClick={async () => {
-                          if (!confirm(`确认删除分类「${cat.label}」？已分配此分类的文章不受影响。`)) return;
-                          await deleteCategory(cat.id);
-                        }}
-                      >
-                        <X size={12} className="mr-1" />删除
-                      </Button>
+            </DialogHeader>
+            <div className="space-y-3 mt-2">
+              {/* Add / Edit form */}
+              {catFormUrl !== null && (
+                <div className="p-3 border rounded-lg space-y-3 bg-muted/40">
+                  <p className="text-sm font-medium">{catFormUrl === "new" ? "新增分类" : "编辑分类"}</p>
+                  <div className="flex gap-2">
+                    <div className="w-16">
+                      <Label className="text-xs">图标</Label>
+                      <Input value={catIcon} onChange={(e) => setCatIcon(e.target.value)} className="mt-1 h-8 text-center text-lg" maxLength={4} />
+                    </div>
+                    <div className="flex-1">
+                      <Label className="text-xs">名称</Label>
+                      <Input value={catLabel} onChange={(e) => setCatLabel(e.target.value)} placeholder="分类名称" className="mt-1 h-8" />
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  <div>
+                    <Label className="text-xs">颜色</Label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {COLOR_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.id}
+                          title={opt.label}
+                          onClick={() => setCatColor(opt.id)}
+                          className={`w-6 h-6 rounded-full ${opt.swatch} ring-offset-1 transition-all ${catColor === opt.id ? "ring-2 ring-foreground scale-110" : "hover:scale-105"}`}
+                        />
+                      ))}
+                    </div>
+                    {catLabel && (
+                      <span className={`inline-flex items-center gap-1 mt-2 px-2 py-0.5 text-xs font-medium rounded-full ${getBadgeClass(catColor)}`}>
+                        <span>{catIcon}</span><span>{catLabel}</span>
+                      </span>
+                    )}
+                  </div>
+                  {catError && (
+                    <p className="text-xs text-destructive bg-destructive/10 px-2 py-1 rounded">{catError}</p>
+                  )}
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      disabled={!catLabel.trim() || catSaving}
+                      onClick={async () => {
+                        if (!catLabel.trim()) return;
+                        setCatError("");
+                        setCatSaving(true);
+                        try {
+                          if (catFormUrl === "new") {
+                            const slug = catLabel.trim().toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 8);
+                            const id = (slug || "cat") + "-" + Date.now().toString(36);
+                            await addCategory({ id, label: catLabel.trim(), icon: catIcon, color: catColor });
+                          } else {
+                            await updateCategoryDef(catFormUrl!, { label: catLabel.trim(), icon: catIcon, color: catColor });
+                          }
+                          setCatFormUrl(null);
+                        } catch (e) {
+                          setCatError(e instanceof Error ? e.message : "保存失败，请重试");
+                        } finally {
+                          setCatSaving(false);
+                        }
+                      }}
+                    >
+                      {catSaving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                      保存
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => { setCatFormUrl(null); setCatError(""); }}>取消</Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Category list */}
+              {categories.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">暂无分类，点击"新增分类"添加</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {categories.map((cat) => (
+                    <div key={cat.id} className="flex items-center justify-between p-2 rounded-lg border">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full ${getBadgeClass(cat.color)}`}>
+                        <span>{cat.icon}</span><span>{cat.label}</span>
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs"
+                          onClick={() => { setCatFormUrl(cat.id); setCatLabel(cat.label); setCatIcon(cat.icon); setCatColor(cat.color); setCatError(""); }}>
+                          <Pencil size={12} className="mr-1" />编辑
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                          onClick={async () => {
+                            if (!confirm(`确认删除分类「${cat.label}」？`)) return;
+                            await deleteCategory(cat.id);
+                          }}>
+                          <X size={12} className="mr-1" />删除
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
