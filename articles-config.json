@@ -81,8 +81,12 @@
     "url": "https://github.com/yangwei2future/interview/blob/main/src/database/redis.md",
     "createdAt": "2026-04-18T03:15:34.928Z",
     "title": "Redis 核心知识",
-    "updatedAt": "2026-04-19T14:27:01.822Z",
-    "category": "tools"
+    "updatedAt": "2026-04-19T14:59:19.789Z",
+    "category": "tools",
+    "categories": [
+      "cat-mo5w0jm5",
+      "backend"
+    ]
   },
   {
     "url": "https://github.com/yangwei2future/interview/blob/main/src/database/mysql-index.md",
