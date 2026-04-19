@@ -69,8 +69,13 @@
     "url": "https://github.com/yangwei2future/interview/blob/main/src/concurrent/threadpool/README.md",
     "createdAt": "2026-04-15T16:02:09.819Z",
     "title": "线程池（ThreadPool）完整笔记",
-    "updatedAt": "2026-04-19T14:26:58.621Z",
-    "category": "ai"
+    "updatedAt": "2026-04-19T14:59:11.906Z",
+    "category": "ai",
+    "categories": [
+      "backend",
+      "tools",
+      "architecture"
+    ]
   },
   {
     "url": "https://github.com/yangwei2future/interview/blob/main/src/database/redis.md",
