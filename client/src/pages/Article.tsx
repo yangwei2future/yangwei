@@ -172,7 +172,17 @@ export default function Article() {
                   minute: "2-digit",
                 })}
               </time>
-              <span>{article.author}</span>
+              {article.author && (
+                <span className="inline-flex items-center gap-2 pl-1 pr-3 py-0.5 rounded-full border border-border bg-accent/60 text-foreground text-xs font-medium">
+                  <img
+                    src="/avatar.jpg"
+                    alt={article.author}
+                    className="w-5 h-5 rounded-full object-cover ring-1 ring-border"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                  />
+                  {article.author}
+                </span>
+              )}
             </div>
 
             {/* Tags */}
