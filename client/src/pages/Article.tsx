@@ -162,8 +162,8 @@ export default function Article() {
 
             <div className="mt-6 flex items-center justify-between text-sm text-muted-foreground">
               <time>
-                {article.updatedAt ? "更新于 " : "创建于 "}
-                {new Date(article.updatedAt || article.createdAt).toLocaleString("zh-CN", {
+                {"创建于 "}
+                {new Date(article.createdAt).toLocaleString("zh-CN", {
                   timeZone: "Asia/Shanghai",
                   year: "numeric",
                   month: "long",

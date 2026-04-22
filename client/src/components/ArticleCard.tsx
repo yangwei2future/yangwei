@@ -24,7 +24,7 @@ export default function ArticleCard({
   tags = [],
 }: ArticleCardProps) {
   const { getCategoryById } = useCategories();
-  const displayDate = updatedAt ?? createdAt ?? date;
+  const displayDate = createdAt ?? date;
   const cats = (categories ?? []).map(getCategoryById).filter(Boolean) as NonNullable<ReturnType<typeof getCategoryById>>[];
 
   return (
