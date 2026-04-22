@@ -10,7 +10,8 @@ export default function Navigation() {
     <nav className="sticky top-0 z-50 bg-background border-b border-border">
       <div className="container flex items-center justify-between h-16 gap-4">
         {/* Logo/Brand */}
-        <Link href="/" className="text-2xl font-bold text-foreground hover:text-primary transition-colors flex-shrink-0">
+        <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-foreground hover:text-primary transition-colors flex-shrink-0">
+          <img src="/logo.png" alt="logo" className="w-7 h-7 object-contain" />
           个人博客
         </Link>
 
