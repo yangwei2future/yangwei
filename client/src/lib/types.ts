@@ -13,6 +13,8 @@ export interface Article {
   createdAt: string;
   updatedAt?: string;
   categories?: string[];
+  refs?: string[];
+  hidden?: boolean;
 }
 
 export interface BlogConfig {

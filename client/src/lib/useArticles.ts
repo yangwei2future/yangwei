@@ -19,6 +19,7 @@ interface CacheData {
 
 export function useArticles() {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [allLinks, setAllLinks] = useState<import("./article-links").ArticleLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,8 +32,9 @@ export function useArticles() {
       setLoading(true);
       setError(null);
 
-      const allEntries: { url: string; title?: string; createdAt?: string; updatedAt?: string; hidden?: boolean; categories?: string[] }[] =
+      const allEntries: import("./article-links").ArticleLink[] =
         await fetch("/api/articles").then((r) => r.json());
+      setAllLinks(allEntries);
       // Filter out hidden articles for public view
       const entries = allEntries.filter((e) => !e.hidden);
 
@@ -55,6 +57,8 @@ export function useArticles() {
               createdAt: entry?.createdAt ?? article.createdAt,
               updatedAt: entry?.updatedAt ?? article.updatedAt,
               categories: entry?.categories ?? article.categories,
+              refs: entry?.refs,
+              hidden: entry?.hidden ?? false,
             };
           })
           .sort((a, b) => {
@@ -79,6 +83,8 @@ export function useArticles() {
           createdAt: entry?.createdAt || new Date().toISOString(),
           updatedAt: entry?.updatedAt,
           categories: entry?.categories,
+          refs: entry?.refs,
+          hidden: entry?.hidden ?? false,
         };
       });
 
@@ -177,6 +183,20 @@ export function useArticles() {
     }
   }
 
+  async function updateArticleRefs(url: string, refs: string[]) {
+    await fetch("/api/articles", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, refs }),
+    });
+    const id = decodeURIComponent(url.split("/").pop()?.replace(".md", "") ?? "");
+    setArticles((prev) => {
+      const next = prev.map((a) => (a.id === id ? { ...a, refs: refs.length > 0 ? refs : undefined } : a));
+      cacheArticles(next);
+      return next;
+    });
+  }
+
   async function updateArticleCategory(url: string, categories: string[]) {
     await fetch("/api/articles", {
       method: "PATCH",
@@ -191,7 +211,7 @@ export function useArticles() {
     });
   }
 
-  return { articles, loading, error, reload: loadArticles, refresh: refreshArticles, refreshSingle: refreshSingleArticle, updateTitle: updateArticleTitle, updateCategory: updateArticleCategory, toggleHidden };
+  return { articles, allLinks, loading, error, reload: loadArticles, refresh: refreshArticles, refreshSingle: refreshSingleArticle, updateTitle: updateArticleTitle, updateCategory: updateArticleCategory, updateRefs: updateArticleRefs, toggleHidden };
 }
 
 /**

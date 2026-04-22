@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lock, LogOut, Loader2, RefreshCw, Pencil, Check, X, EyeOff, Eye, Tag, FolderOpen } from "lucide-react";
+import { Lock, LogOut, Loader2, RefreshCw, Pencil, Check, X, EyeOff, Eye, Tag, FolderOpen, BookMarked } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   verifyPassword,
@@ -33,13 +33,15 @@ export default function Admin() {
   const [links, setLinks] = useState<ArticleLink[]>([]);
   const [loadingLinks, setLoadingLinks] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const { articles, reload, refresh, refreshSingle, updateTitle, updateCategory, toggleHidden } = useArticles();
+  const { articles, allLinks, reload, refresh, refreshSingle, updateTitle, updateCategory, updateRefs, toggleHidden } = useArticles();
   const [syncing, setSyncing] = useState(false);
   const [syncingUrl, setSyncingUrl] = useState<string | null>(null);
   const [editingUrl, setEditingUrl] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingCategoryUrl, setEditingCategoryUrl] = useState<string | null>(null);
   const [pendingCategories, setPendingCategories] = useState<string[]>([]);
+  const [editingRefsUrl, setEditingRefsUrl] = useState<string | null>(null);
+  const [pendingRefs, setPendingRefs] = useState<string[]>([]);
   const { categories, addCategory, updateCategory: updateCategoryDef, deleteCategory } = useCategories();
   // Category management form
   const [catDialogOpen, setCatDialogOpen] = useState(false);
@@ -356,6 +358,80 @@ export default function Admin() {
                           className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border border-dashed border-muted-foreground/40 text-muted-foreground hover:bg-muted"
                         >
                           <Tag size={10} />{(link.categories ?? []).length > 0 ? "编辑" : "设置分类"}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Refs editor */}
+                    {editingRefsUrl === link.url ? (
+                      <div className="space-y-2 py-1">
+                        <p className="text-xs font-medium text-muted-foreground">选择引用的文章（包含隐藏）</p>
+                        <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                          {allLinks
+                            .filter((l) => l.url !== link.url)
+                            .map((l) => {
+                              const articleTitle = articles.find((a) =>
+                                l.url.includes(encodeURIComponent(a.id)) || l.url.endsWith(a.id + ".md")
+                              )?.title;
+                              const refId = decodeURIComponent(l.url.split("/").pop()?.replace(".md", "") ?? "");
+                              const title = articleTitle || l.title || refId;
+                              const selected = pendingRefs.includes(refId);
+                              return (
+                                <button
+                                  key={l.url}
+                                  onClick={() => setPendingRefs((prev) =>
+                                    selected ? prev.filter((id) => id !== refId) : [...prev, refId]
+                                  )}
+                                  className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-left transition-all border ${
+                                    selected
+                                      ? "border-primary/40 bg-primary/5 text-foreground"
+                                      : "border-transparent hover:bg-muted text-muted-foreground"
+                                  }`}
+                                >
+                                  {selected ? <Check size={11} className="text-primary shrink-0" /> : <span className="w-[11px] shrink-0" />}
+                                  {l.hidden && <Lock size={10} className="text-muted-foreground/60 shrink-0" />}
+                                  <span className="truncate">{title}</span>
+                                </button>
+                              );
+                            })}
+                        </div>
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            onClick={async () => {
+                              await updateRefs(link.url, pendingRefs);
+                              const updated = await getArticleLinks();
+                              setLinks(updated);
+                              setEditingRefsUrl(null);
+                            }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs bg-primary text-primary-foreground rounded-full hover:opacity-90"
+                          >
+                            <Check size={11} />确认
+                          </button>
+                          <button onClick={() => setEditingRefsUrl(null)} className="text-xs text-muted-foreground hover:text-foreground">取消</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-xs text-muted-foreground">引用：</span>
+                        {(link.refs ?? []).length > 0 ? (
+                          (link.refs ?? []).map((refId) => {
+                            const t = articles.find((a) => a.id === refId)?.title
+                              || allLinks.find((l) => l.url.endsWith(refId + ".md") || l.url.includes(encodeURIComponent(refId)))?.title
+                              || refId;
+                            const isHidden = allLinks.find((l) => l.url.endsWith(refId + ".md") || l.url.includes(encodeURIComponent(refId)))?.hidden;
+                            return (
+                              <span key={refId} className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
+                                {isHidden && <Lock size={9} />}
+                                <span className="max-w-[120px] truncate">{t}</span>
+                              </span>
+                            );
+                          })
+                        ) : null}
+                        <button
+                          onClick={() => { setEditingRefsUrl(link.url); setPendingRefs(link.refs ?? []); }}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border border-dashed border-muted-foreground/40 text-muted-foreground hover:bg-muted"
+                        >
+                          <BookMarked size={10} />{(link.refs ?? []).length > 0 ? "编辑" : "设置引用"}
                         </button>
                       </div>
                     )}

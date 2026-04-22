@@ -7,9 +7,11 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import rehypeHighlight from "rehype-highlight";
 import "highlight.js/styles/github.css";
-import { ArrowLeft, X, Copy, Check } from "lucide-react";
+import { ArrowLeft, X, Copy, Check, Lock, BookMarked } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { ComponentPropsWithoutRef, ReactElement } from "react";
+import { fetchArticlesFromGitHub } from "@/lib/markdown-loader";
+import type { Article as ArticleType } from "@/lib/types";
 
 function makeHeading(Tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
   return function Heading({ children, ...props }: ComponentPropsWithoutRef<typeof Tag>) {
@@ -69,8 +71,10 @@ const headingComponents = {
 
 export default function Article() {
   const { id } = useParams<{ id: string }>();
-  const { articles, loading, error } = useArticles();
+  const { articles, allLinks, loading } = useArticles();
   const [zoomedSrc, setZoomedSrc] = useState<string | null>(null);
+  const [hiddenArticle, setHiddenArticle] = useState<ArticleType | null>(null);
+  const [hiddenLoading, setHiddenLoading] = useState(false);
 
   useEffect(() => {
     if (!zoomedSrc) return;
@@ -78,6 +82,27 @@ export default function Article() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [zoomedSrc]);
+
+  // Load hidden article if not found in public list
+  useEffect(() => {
+    if (loading || !id) return;
+    if (articles.find((a) => a.id === id)) return;
+    const link = allLinks.find(
+      (l) => l.hidden && (l.url.endsWith(id + ".md") || l.url.includes(encodeURIComponent(id)))
+    );
+    if (!link) return;
+    setHiddenLoading(true);
+    fetchArticlesFromGitHub([link])
+      .then(([fetched]) => {
+        if (fetched) setHiddenArticle({
+          ...fetched,
+          createdAt: link.createdAt ?? fetched.createdAt,
+          refs: link.refs,
+          hidden: true,
+        });
+      })
+      .finally(() => setHiddenLoading(false));
+  }, [id, loading, articles, allLinks]);
 
   const markdownComponents = {
     ...headingComponents,
@@ -101,7 +126,7 @@ export default function Article() {
     },
   };
 
-  if (loading) {
+  if (loading || hiddenLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground">加载中...</p>
@@ -109,15 +134,7 @@ export default function Article() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-destructive">{error}</p>
-      </div>
-    );
-  }
-
-  const article = articles.find((a) => a.id === id);
+  const article = articles.find((a) => a.id === id) ?? hiddenArticle;
 
   if (!article) {
     return (
@@ -156,8 +173,14 @@ export default function Article() {
           </Link>
 
           <article>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground flex items-center gap-3 flex-wrap">
               {article.title}
+              {article.hidden && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-muted text-muted-foreground border border-border align-middle shrink-0">
+                  <Lock size={11} />
+                  隐藏文章
+                </span>
+              )}
             </h1>
 
             <div className="mt-6 flex items-center justify-between text-sm text-muted-foreground">
@@ -232,6 +255,52 @@ export default function Article() {
           )}
         </div>
       </section>
+
+      {/* Referenced Articles */}
+      {(article.refs ?? []).length > 0 && (() => {
+        const refItems = (article.refs ?? []).map((refId) => {
+          const pub = articles.find((a) => a.id === refId);
+          if (pub) return { id: pub.id, title: pub.title, excerpt: pub.excerpt, hidden: false };
+          const link = allLinks.find(
+            (l) => l.url.endsWith(refId + ".md") || l.url.includes(encodeURIComponent(refId))
+          );
+          if (link) return { id: refId, title: link.title ?? refId, excerpt: "", hidden: !!link.hidden };
+          return null;
+        }).filter(Boolean) as { id: string; title: string; excerpt: string; hidden: boolean }[];
+
+        if (refItems.length === 0) return null;
+        return (
+          <section className="py-12 border-t border-border">
+            <div className="container max-w-4xl">
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-foreground mb-4">
+                <BookMarked size={16} className="text-muted-foreground" />
+                引用文章
+              </h2>
+              <div className="space-y-2">
+                {refItems.map((ref) => (
+                  <Link
+                    key={ref.id}
+                    href={`/article/${ref.id}`}
+                    className="flex items-center gap-3 p-3 rounded-lg border border-border hover:border-muted-foreground/30 hover:bg-accent/40 transition-colors group"
+                  >
+                    {ref.hidden && (
+                      <Lock size={13} className="shrink-0 text-muted-foreground/60" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
+                        {ref.title}
+                      </p>
+                      {ref.excerpt && (
+                        <p className="text-xs text-muted-foreground truncate mt-0.5">{ref.excerpt}</p>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* Related Articles */}
       {relatedArticles.length > 0 && (

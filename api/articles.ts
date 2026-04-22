@@ -12,6 +12,7 @@ interface ArticleEntry {
   updatedAt?: string;
   hidden?: boolean;
   categories?: string[];
+  refs?: string[];
 }
 
 async function getConfig(): Promise<{ entries: ArticleEntry[]; sha: string }> {
@@ -76,7 +77,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === "PATCH") {
-      const { url, title, hidden, categories } = req.body || {};
+      const { url, title, hidden, categories, refs } = req.body || {};
       const { entries, sha } = await getConfig();
       const updatedAt = new Date().toISOString();
       if (url) {
@@ -88,6 +89,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             if (title !== undefined) updated.title = title.trim() || undefined;
             if (hidden !== undefined) updated.hidden = hidden;
             if (categories !== undefined) updated.categories = Array.isArray(categories) && categories.length > 0 ? categories : undefined;
+            if (refs !== undefined) updated.refs = Array.isArray(refs) && refs.length > 0 ? refs : undefined;
             return updated;
           }),
           sha
