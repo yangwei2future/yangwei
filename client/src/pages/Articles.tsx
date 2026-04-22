@@ -2,35 +2,26 @@ import { useState, useMemo } from "react";
 import Navigation from "@/components/Navigation";
 import ArticleCard from "@/components/ArticleCard";
 import { useArticles } from "@/lib/useArticles";
+import { useCategories } from "@/contexts/CategoriesContext";
+import { getBadgeClass } from "@/lib/categories";
 import { Loader2 } from "lucide-react";
-
-/**
- * Articles Page
- *
- * Design: Modern Minimalism
- * - Clean list of all articles
- * - Tag filtering functionality
- * - Responsive grid layout
- */
 
 export default function Articles() {
   const { articles, loading, error } = useArticles();
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const { categories, getCategoryById } = useCategories();
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // Extract unique tags
-  const allTags = useMemo(() => {
-    const tags = new Set<string>();
-    articles.forEach((article) => {
-      article.tags.forEach((tag) => tags.add(tag));
-    });
-    return Array.from(tags).sort();
-  }, [articles]);
+  // Only show categories that have at least one article
+  const activeCategories = useMemo(() => {
+    const usedIds = new Set<string>();
+    articles.forEach((a) => (a.categories ?? []).forEach((id) => usedIds.add(id)));
+    return categories.filter((c) => usedIds.has(c.id));
+  }, [articles, categories]);
 
-  // Filter articles by tag
   const filteredArticles = useMemo(() => {
-    if (!selectedTag) return articles;
-    return articles.filter((article) => article.tags.includes(selectedTag));
-  }, [articles, selectedTag]);
+    if (!selectedCategory) return articles;
+    return articles.filter((a) => (a.categories ?? []).includes(selectedCategory));
+  }, [articles, selectedCategory]);
 
   if (loading) {
     return (
@@ -49,6 +40,8 @@ export default function Articles() {
     );
   }
 
+  const selectedCat = selectedCategory ? getCategoryById(selectedCategory) : null;
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -56,45 +49,56 @@ export default function Articles() {
       {/* Header */}
       <section className="py-16 border-b border-border">
         <div className="container max-w-4xl">
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-            所有文章
-          </h1>
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground">所有文章</h1>
           <p className="mt-4 text-lg text-muted-foreground">
-            共 {filteredArticles.length} 篇文章
+            {selectedCat ? (
+              <>
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-sm font-medium rounded-full ${getBadgeClass(selectedCat.color)}`}>
+                  <span>{selectedCat.icon}</span>
+                  <span>{selectedCat.label}</span>
+                </span>
+                <span className="ml-2">共 {filteredArticles.length} 篇</span>
+              </>
+            ) : (
+              `共 ${articles.length} 篇文章`
+            )}
           </p>
         </div>
       </section>
 
-      {/* Filter Tags */}
-      <section className="py-8 border-b border-border">
-        <div className="container max-w-4xl">
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setSelectedTag(null)}
-              className={`px-3 py-1 text-sm rounded-lg transition-colors ${
-                selectedTag === null
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-accent text-accent-foreground hover:bg-border"
-              }`}
-            >
-              全部
-            </button>
-            {allTags.map((tag) => (
+      {/* Category Filter */}
+      {activeCategories.length > 0 && (
+        <section className="py-6 border-b border-border">
+          <div className="container max-w-4xl">
+            <div className="flex flex-wrap gap-2">
               <button
-                key={tag}
-                onClick={() => setSelectedTag(tag)}
-                className={`px-3 py-1 text-sm rounded-lg transition-colors ${
-                  selectedTag === tag
-                    ? "bg-primary text-primary-foreground"
+                onClick={() => setSelectedCategory(null)}
+                className={`px-3 py-1.5 text-sm rounded-full font-medium transition-all duration-150 ${
+                  selectedCategory === null
+                    ? "bg-foreground text-background shadow-sm"
                     : "bg-accent text-accent-foreground hover:bg-border"
                 }`}
               >
-                {tag}
+                全部
               </button>
-            ))}
+              {activeCategories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(selectedCategory === cat.id ? null : cat.id)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full font-medium transition-all duration-150 ${
+                    selectedCategory === cat.id
+                      ? `${getBadgeClass(cat.color)} ring-2 ring-offset-1 ring-current shadow-sm`
+                      : `${getBadgeClass(cat.color)} opacity-60 hover:opacity-100`
+                  }`}
+                >
+                  <span>{cat.icon}</span>
+                  <span>{cat.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Articles List */}
       <section className="py-16">
@@ -116,10 +120,8 @@ export default function Articles() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground">
-                暂无该标签的文章
-              </p>
+            <div className="text-center py-16">
+              <p className="text-lg text-muted-foreground">该分类下暂无文章</p>
             </div>
           )}
         </div>
@@ -128,9 +130,7 @@ export default function Articles() {
       {/* Footer */}
       <footer className="py-12 border-t border-border">
         <div className="container text-center">
-          <p className="text-sm text-muted-foreground">
-            © 2026 个人博客. 保留所有权利。
-          </p>
+          <p className="text-sm text-muted-foreground">© 2026 个人博客. 保留所有权利。</p>
         </div>
       </footer>
     </div>
