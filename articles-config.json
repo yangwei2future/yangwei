@@ -131,5 +131,10 @@
       "backend",
       "cat-mo5w0jm5"
     ]
+  },
+  {
+    "url": "https://github.com/yangwei2future/interview/blob/main/src/database/mysql-lock-review.md",
+    "createdAt": "2026-04-22T17:15:37.737Z",
+    "title": "MySQL 锁机制 — 面试复习手册"
   }
 ]
