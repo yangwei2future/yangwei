@@ -60,14 +60,14 @@ export default function TableOfContents({ content }: Props) {
   const [side, setSide] = useState<"left" | "right">(() => {
     try { return (localStorage.getItem("toc_side") as "left" | "right") ?? "left"; } catch { return "left"; }
   });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragLeft, setDragLeft] = useState(0);
-  const dragRef = useRef({ startMouseX: 0, startLeft: 0, currentLeft: 0 });
+
+  const panelRef = useRef<HTMLElement>(null);
+  const dragState = useRef({ dragging: false, startMouseX: 0, startPanelLeft: 0 });
 
   const items = parseToc(content);
   const visible = open || pinned;
 
-  // Intersection observer for active heading
+  // IntersectionObserver
   useEffect(() => {
     if (items.length === 0) return;
     const observer = new IntersectionObserver(
@@ -84,69 +84,78 @@ export default function TableOfContents({ content }: Props) {
     return () => observer.disconnect();
   }, [items]);
 
-  // Global cursor during drag
+  // Snap panel to final side (also called after drag release)
+  const snapToSide = useCallback((newSide: "left" | "right") => {
+    const panel = panelRef.current;
+    if (!panel) return;
+    const snapped = newSide === "left" ? 0 : window.innerWidth - PANEL_W;
+    panel.style.transition = "left 0.25s cubic-bezier(0.4,0,0.2,1)";
+    panel.style.left = `${snapped}px`;
+  }, []);
+
+  // When side or visibility changes, re-snap
   useEffect(() => {
-    if (!isDragging) return;
+    const panel = panelRef.current;
+    if (!panel || dragState.current.dragging) return;
+    const snapped = side === "left" ? 0 : window.innerWidth - PANEL_W;
+    const hidden = side === "left" ? -PANEL_W - 10 : window.innerWidth + 10;
+    panel.style.transition = "left 0.3s cubic-bezier(0.4,0,0.2,1)";
+    panel.style.left = `${visible ? snapped : hidden}px`;
+  }, [side, visible]);
+
+  const onDragStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    const rect = panel.getBoundingClientRect();
+    dragState.current = { dragging: true, startMouseX: e.clientX, startPanelLeft: rect.left };
+
     document.body.style.cursor = "grabbing";
     document.body.style.userSelect = "none";
-    return () => {
+
+    const onMouseMove = (ev: MouseEvent) => {
+      const delta = ev.clientX - dragState.current.startMouseX;
+      const newLeft = dragState.current.startPanelLeft + delta;
+      const clamped = Math.max(-PANEL_W + 48, Math.min(window.innerWidth - 48, newLeft));
+      panel.style.transition = "none";
+      panel.style.left = `${clamped}px`;
+    };
+
+    const onMouseUp = (ev: MouseEvent) => {
+      dragState.current.dragging = false;
       document.body.style.cursor = "";
       document.body.style.userSelect = "";
-    };
-  }, [isDragging]);
 
-  // Drag start
-  const onDragStart = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      const startLeft = side === "left" ? 0 : window.innerWidth - PANEL_W;
-      dragRef.current = { startMouseX: e.clientX, startLeft, currentLeft: startLeft };
-      setDragLeft(startLeft);
-      setIsDragging(true);
-    },
-    [side]
-  );
-
-  // Drag move + release
-  useEffect(() => {
-    if (!isDragging) return;
-
-    const onMouseMove = (e: MouseEvent) => {
-      const newLeft = dragRef.current.startLeft + (e.clientX - dragRef.current.startMouseX);
-      const clamped = Math.max(-PANEL_W + 48, Math.min(window.innerWidth - 48, newLeft));
-      dragRef.current.currentLeft = clamped;
-      setDragLeft(clamped);
-    };
-
-    const onMouseUp = () => {
-      const center = dragRef.current.currentLeft + PANEL_W / 2;
+      const delta = ev.clientX - dragState.current.startMouseX;
+      const finalLeft = dragState.current.startPanelLeft + delta;
+      const center = finalLeft + PANEL_W / 2;
       const newSide = center > window.innerWidth / 2 ? "right" : "left";
+
+      snapToSide(newSide);
       setSide(newSide);
       try { localStorage.setItem("toc_side", newSide); } catch {}
-      setIsDragging(false);
+
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
     };
 
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
-    return () => {
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
-    };
-  }, [isDragging]);
+  }, [snapToSide]);
 
   const handlePin = useCallback(() => setPinned((p) => !p), []);
 
   if (items.length === 0) return null;
 
-  const snappedLeft = side === "left" ? 0 : window.innerWidth - PANEL_W;
-  const hiddenLeft = side === "left" ? -PANEL_W - 10 : window.innerWidth + 10;
-
-  const panelStyle: React.CSSProperties = isDragging
-    ? { left: dragLeft, transition: "none" }
-    : { left: visible ? snappedLeft : hiddenLeft, transition: "left 0.3s cubic-bezier(0.4,0,0.2,1)" };
-
   const toggleBtnStyle: React.CSSProperties =
     side === "right" ? { right: 16, left: "auto", top: 96 } : { left: 16, top: 96 };
+
+  // Initial inline style (before useEffect fires)
+  const initialLeft = (() => {
+    if (visible) return side === "left" ? 0 : window.innerWidth - PANEL_W;
+    return side === "left" ? -PANEL_W - 10 : window.innerWidth + 10;
+  })();
 
   return (
     <>
@@ -164,12 +173,12 @@ export default function TableOfContents({ content }: Props) {
 
       {/* Sidebar */}
       <aside
-        style={panelStyle}
+        ref={panelRef as React.RefObject<HTMLElement>}
+        style={{ left: initialLeft, transition: "left 0.3s cubic-bezier(0.4,0,0.2,1)" }}
         className={cn(
           "fixed top-0 h-screen w-56 z-30 flex flex-col",
           "bg-background/80 backdrop-blur-md shadow-2xl",
           side === "left" ? "border-r border-border/40" : "border-l border-border/40",
-          isDragging && "select-none"
         )}
       >
         {/* Decorative top gradient line */}
@@ -178,10 +187,7 @@ export default function TableOfContents({ content }: Props) {
         {/* Header / drag handle */}
         <div
           onMouseDown={onDragStart}
-          className={cn(
-            "flex items-center justify-between px-4 pt-4 pb-3 shrink-0",
-            isDragging ? "cursor-grabbing" : "cursor-grab"
-          )}
+          className="flex items-center justify-between px-4 pt-4 pb-3 shrink-0 cursor-grab active:cursor-grabbing select-none"
         >
           <div className="flex items-center gap-1.5">
             <GripHorizontal size={13} className="text-muted-foreground/40" />
@@ -241,7 +247,6 @@ export default function TableOfContents({ content }: Props) {
                   : "text-muted-foreground/60 hover:text-muted-foreground"
               )}
             >
-              {/* Active indicator bar */}
               <span
                 className={cn(
                   "absolute top-1/2 -translate-y-1/2 w-0.5 rounded-full transition-all duration-200",
@@ -251,8 +256,6 @@ export default function TableOfContents({ content }: Props) {
                     : "h-0 bg-primary opacity-0 group-hover:h-3/5 group-hover:opacity-40"
                 )}
               />
-
-              {/* Level dot */}
               <span
                 className={cn(
                   "mt-[5px] shrink-0 rounded-full transition-all duration-150",
@@ -264,7 +267,6 @@ export default function TableOfContents({ content }: Props) {
                     : "bg-muted-foreground/30 group-hover:bg-muted-foreground/50"
                 )}
               />
-
               <span className={cn("truncate", item.level === 1 && "font-medium")}>
                 {item.text}
               </span>
@@ -277,7 +279,7 @@ export default function TableOfContents({ content }: Props) {
       </aside>
 
       {/* Backdrop */}
-      {open && !pinned && !isDragging && (
+      {open && !pinned && (
         <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
       )}
     </>
