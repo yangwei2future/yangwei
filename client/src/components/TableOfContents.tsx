@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { List, X, Pin } from "lucide-react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { List, X, Pin, GripHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import React from "react";
 
@@ -47,6 +47,8 @@ export function parseToc(content: string): TocItem[] {
   return items;
 }
 
+const PANEL_W = 224; // w-56
+
 interface Props {
   content: string;
 }
@@ -55,14 +57,23 @@ export default function TableOfContents({ content }: Props) {
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
   const [activeId, setActiveId] = useState("");
-  const items = parseToc(content);
+  const [side, setSide] = useState<"left" | "right">(() => {
+    try { return (localStorage.getItem("toc_side") as "left" | "right") ?? "left"; } catch { return "left"; }
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragLeft, setDragLeft] = useState(0);
+  const dragRef = useRef({ startMouseX: 0, startLeft: 0, currentLeft: 0 });
 
+  const items = parseToc(content);
+  const visible = open || pinned;
+
+  // Intersection observer for active heading
   useEffect(() => {
     if (items.length === 0) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        const visible = entries.filter((e) => e.isIntersecting);
-        if (visible.length > 0) setActiveId(visible[0].target.id);
+        const vis = entries.filter((e) => e.isIntersecting);
+        if (vis.length > 0) setActiveId(vis[0].target.id);
       },
       { rootMargin: "-80px 0px -70% 0px" }
     );
@@ -73,21 +84,78 @@ export default function TableOfContents({ content }: Props) {
     return () => observer.disconnect();
   }, [items]);
 
-  const handlePin = useCallback(() => {
-    setPinned((p) => !p);
-  }, []);
+  // Global cursor during drag
+  useEffect(() => {
+    if (!isDragging) return;
+    document.body.style.cursor = "grabbing";
+    document.body.style.userSelect = "none";
+    return () => {
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+  }, [isDragging]);
+
+  // Drag start
+  const onDragStart = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      const startLeft = side === "left" ? 0 : window.innerWidth - PANEL_W;
+      dragRef.current = { startMouseX: e.clientX, startLeft, currentLeft: startLeft };
+      setDragLeft(startLeft);
+      setIsDragging(true);
+    },
+    [side]
+  );
+
+  // Drag move + release
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const onMouseMove = (e: MouseEvent) => {
+      const newLeft = dragRef.current.startLeft + (e.clientX - dragRef.current.startMouseX);
+      const clamped = Math.max(-PANEL_W + 48, Math.min(window.innerWidth - 48, newLeft));
+      dragRef.current.currentLeft = clamped;
+      setDragLeft(clamped);
+    };
+
+    const onMouseUp = () => {
+      const center = dragRef.current.currentLeft + PANEL_W / 2;
+      const newSide = center > window.innerWidth / 2 ? "right" : "left";
+      setSide(newSide);
+      try { localStorage.setItem("toc_side", newSide); } catch {}
+      setIsDragging(false);
+    };
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [isDragging]);
+
+  const handlePin = useCallback(() => setPinned((p) => !p), []);
 
   if (items.length === 0) return null;
 
-  const visible = open || pinned;
+  const snappedLeft = side === "left" ? 0 : window.innerWidth - PANEL_W;
+  const hiddenLeft = side === "left" ? -PANEL_W - 10 : window.innerWidth + 10;
+
+  const panelStyle: React.CSSProperties = isDragging
+    ? { left: dragLeft, transition: "none" }
+    : { left: visible ? snappedLeft : hiddenLeft, transition: "left 0.3s cubic-bezier(0.4,0,0.2,1)" };
+
+  const toggleBtnStyle: React.CSSProperties =
+    side === "right" ? { right: 16, left: "auto", top: 96 } : { left: 16, top: 96 };
 
   return (
     <>
-      {/* Toggle button — only when sidebar is closed */}
+      {/* Toggle button */}
       {!visible && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed left-4 top-24 z-40 flex items-center justify-center w-8 h-8 rounded-lg bg-background/70 backdrop-blur-sm border border-border/50 shadow-sm hover:bg-accent/80 transition-all hover:scale-105"
+          style={toggleBtnStyle}
+          className="fixed z-40 flex items-center justify-center w-8 h-8 rounded-lg bg-background/70 backdrop-blur-sm border border-border/50 shadow-sm hover:bg-accent/80 transition-all hover:scale-105"
           title="打开目录"
         >
           <List size={15} className="text-muted-foreground" />
@@ -96,22 +164,34 @@ export default function TableOfContents({ content }: Props) {
 
       {/* Sidebar */}
       <aside
+        style={panelStyle}
         className={cn(
-          "fixed left-0 top-0 h-screen w-56 z-30 flex flex-col transition-transform duration-300 ease-in-out",
-          "bg-background/80 backdrop-blur-md border-r border-border/40 shadow-2xl",
-          visible ? "translate-x-0" : "-translate-x-full"
+          "fixed top-0 h-screen w-56 z-30 flex flex-col",
+          "bg-background/80 backdrop-blur-md shadow-2xl",
+          side === "left" ? "border-r border-border/40" : "border-l border-border/40",
+          isDragging && "select-none"
         )}
       >
         {/* Decorative top gradient line */}
         <div className="h-px w-full bg-gradient-to-r from-transparent via-primary/40 to-transparent shrink-0" />
 
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-3 shrink-0">
-          <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
-            目录
-          </span>
+        {/* Header / drag handle */}
+        <div
+          onMouseDown={onDragStart}
+          className={cn(
+            "flex items-center justify-between px-4 pt-4 pb-3 shrink-0",
+            isDragging ? "cursor-grabbing" : "cursor-grab"
+          )}
+        >
+          <div className="flex items-center gap-1.5">
+            <GripHorizontal size={13} className="text-muted-foreground/40" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
+              目录
+            </span>
+          </div>
           <div className="flex items-center gap-0.5">
             <button
+              onMouseDown={(e) => e.stopPropagation()}
               onClick={handlePin}
               className={cn(
                 "p-1.5 rounded-md transition-all",
@@ -125,6 +205,7 @@ export default function TableOfContents({ content }: Props) {
             </button>
             {!pinned && (
               <button
+                onMouseDown={(e) => e.stopPropagation()}
                 onClick={() => setOpen(false)}
                 className="p-1.5 rounded-md text-muted-foreground/50 hover:text-muted-foreground hover:bg-accent/60 transition-all"
               >
@@ -163,7 +244,8 @@ export default function TableOfContents({ content }: Props) {
               {/* Active indicator bar */}
               <span
                 className={cn(
-                  "absolute left-0 top-1/2 -translate-y-1/2 w-0.5 rounded-full transition-all duration-200",
+                  "absolute top-1/2 -translate-y-1/2 w-0.5 rounded-full transition-all duration-200",
+                  side === "left" ? "left-0" : "right-0",
                   activeId === item.id
                     ? "h-4/5 bg-primary opacity-100"
                     : "h-0 bg-primary opacity-0 group-hover:h-3/5 group-hover:opacity-40"
@@ -195,7 +277,7 @@ export default function TableOfContents({ content }: Props) {
       </aside>
 
       {/* Backdrop */}
-      {open && !pinned && (
+      {open && !pinned && !isDragging && (
         <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
       )}
     </>
