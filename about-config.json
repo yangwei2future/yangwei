@@ -32,7 +32,7 @@
       "highlights": [
         "完成开放平台从0到1建设（6期迭代）",
         "构建文档中心门户、管理控制台、运营分析大盘",
-        "支持Mysql、OceanBase、MatrixDB、PostgreSQL等6种主流数据库",
+        "支持Mysql、OceanBase等6种主流数据库",
         "实现自然语言转SQL能力（Agentic RAG + MCP）"
       ],
       "metrics": [
