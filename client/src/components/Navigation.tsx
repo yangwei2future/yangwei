@@ -42,14 +42,14 @@ export default function Navigation() {
             {/* Track fill */}
             <span
               className={`absolute inset-0 rounded-full transition-colors duration-300 ${
-                theme === "dark" ? "bg-slate-700" : "bg-amber-50"
+                theme === "dark" ? "bg-slate-700" : "bg-muted"
               }`}
             />
             {/* Icons */}
             <Sun
               size={11}
-              className={`absolute left-2 transition-opacity duration-200 text-amber-500 ${
-                theme === "dark" ? "opacity-30" : "opacity-100"
+              className={`absolute left-2 transition-opacity duration-200 text-muted-foreground ${
+                theme === "dark" ? "opacity-30" : "opacity-60"
               }`}
             />
             <Moon
@@ -63,13 +63,13 @@ export default function Navigation() {
               className={`relative z-10 flex items-center justify-center w-5 h-5 rounded-full shadow-sm transition-all duration-300 ${
                 theme === "dark"
                   ? "translate-x-8 bg-slate-900 border border-slate-600"
-                  : "translate-x-1 bg-white border border-amber-200"
+                  : "translate-x-1 bg-background border border-border"
               }`}
             >
               {theme === "dark" ? (
                 <Moon size={9} className="text-slate-300" />
               ) : (
-                <Sun size={9} className="text-amber-500" />
+                <Sun size={9} className="text-muted-foreground" />
               )}
             </span>
           </button>
