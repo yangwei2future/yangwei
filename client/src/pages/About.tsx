@@ -65,7 +65,7 @@ function EditBtn({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="ml-2 p-1 rounded-md text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent transition-all"
+      className="ml-2 p-1 rounded-md text-muted-foreground/50 hover:text-muted-foreground hover:bg-accent transition-all opacity-0 group-hover:opacity-100"
     >
       <Pencil size={13} />
     </button>
@@ -74,11 +74,11 @@ function EditBtn({ onClick }: { onClick: () => void }) {
 
 function SaveRow({ onSave, onCancel, saving }: { onSave: () => void; onCancel: () => void; saving: boolean }) {
   return (
-    <div className="flex items-center gap-2 mt-3">
+    <div className="flex items-center group gap-2 mt-3">
       <button
         onClick={onSave}
         disabled={saving}
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-full hover:opacity-90 disabled:opacity-50"
+        className="inline-flex items-center group gap-1.5 px-3 py-1.5 text-xs bg-primary text-primary-foreground rounded-full hover:opacity-90 disabled:opacity-50"
       >
         <Check size={11} />{saving ? "保存中…" : "保存"}
       </button>
@@ -189,7 +189,7 @@ export default function About() {
               />
             </div>
           ) : (
-            <p className="mt-4 text-lg text-muted-foreground flex items-center">
+            <p className="mt-4 text-lg text-muted-foreground inline-flex items-center group">
               {data.subtitle}
               {isAdmin && <EditBtn onClick={() => startEdit("subtitle")} />}
             </p>
@@ -200,7 +200,7 @@ export default function About() {
       {/* Intro */}
       <section className="py-12 border-b border-border">
         <div className="container max-w-2xl">
-          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center">
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center group">
             个人简介
             {isAdmin && editing !== "intro" && <EditBtn onClick={() => startEdit("intro")} />}
           </h2>
@@ -233,7 +233,7 @@ export default function About() {
       {/* Skills */}
       <section className="py-12 border-b border-border">
         <div className="container max-w-2xl">
-          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center">
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center group">
             技能
             {isAdmin && editing !== "skills" && <EditBtn onClick={() => startEdit("skills")} />}
           </h2>
@@ -268,7 +268,7 @@ export default function About() {
       {/* Experience */}
       <section className="py-12 border-b border-border">
         <div className="container max-w-2xl">
-          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center">
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center group">
             工作经历
             {isAdmin && editing !== "experience" && <EditBtn onClick={() => startEdit("experience")} />}
           </h2>
@@ -300,7 +300,7 @@ export default function About() {
               ))}
               <button
                 onClick={() => setDraftExp((prev) => [...prev, { role: "", company: "", period: "", description: "" }])}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-dashed border-muted-foreground/40 rounded-full text-muted-foreground hover:bg-muted"
+                className="inline-flex items-center group gap-1.5 px-3 py-1.5 text-xs border border-dashed border-muted-foreground/40 rounded-full text-muted-foreground hover:bg-muted"
               >
                 <Plus size={11} />新增经历
               </button>
@@ -328,7 +328,7 @@ export default function About() {
       {/* Projects */}
       <section className="py-12 border-b border-border">
         <div className="container max-w-2xl">
-          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center">
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center group">
             项目经历
             {isAdmin && editing !== "projects" && <EditBtn onClick={() => startEdit("projects")} />}
           </h2>
@@ -371,7 +371,7 @@ export default function About() {
               ))}
               <button
                 onClick={() => setDraftProjects((prev) => [...prev, { name: "", role: "", period: "", highlights: [""], metrics: [""] }])}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs border border-dashed border-muted-foreground/40 rounded-full text-muted-foreground hover:bg-muted"
+                className="inline-flex items-center group gap-1.5 px-3 py-1.5 text-xs border border-dashed border-muted-foreground/40 rounded-full text-muted-foreground hover:bg-muted"
               >
                 <Plus size={11} />新增项目
               </button>
@@ -388,7 +388,7 @@ export default function About() {
                       <div className="flex items-start justify-between mb-1">
                         <h3 className="text-lg font-semibold text-foreground">{project.name}</h3>
                       </div>
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center group gap-2 mb-2">
                         <span className="text-sm text-primary font-medium">{project.role}</span>
                         <span className="text-xs text-muted-foreground">•</span>
                         <span className="text-sm text-muted-foreground">{project.period}</span>
@@ -415,7 +415,7 @@ export default function About() {
       {/* Contact */}
       <section className="py-12 border-b border-border">
         <div className="container max-w-2xl">
-          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center">
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center group">
             联系方式
             {isAdmin && editing !== "contact" && <EditBtn onClick={() => startEdit("contact")} />}
           </h2>
@@ -423,7 +423,7 @@ export default function About() {
           {editing === "contact" ? (
             <div className="space-y-3">
               {(["email", "github", "wechat", "phone"] as const).map((field) => (
-                <div key={field} className="flex items-center gap-3">
+                <div key={field} className="flex items-center group gap-3">
                   <span className="w-14 text-xs text-muted-foreground shrink-0">{{ email: "邮箱", github: "GitHub", wechat: "微信", phone: "电话" }[field]}</span>
                   <input
                     className="flex-1 border border-border rounded px-2.5 py-1.5 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary/30"
@@ -436,20 +436,20 @@ export default function About() {
             </div>
           ) : (
             <div className="space-y-3">
-              <a href={`mailto:${data.contact.email}`} className="flex items-center gap-3 p-4 rounded-lg border border-border hover:border-muted-foreground/30 transition-colors group">
+              <a href={`mailto:${data.contact.email}`} className="flex items-center group gap-3 p-4 rounded-lg border border-border hover:border-muted-foreground/30 transition-colors group">
                 <Mail size={20} className="text-primary shrink-0" />
                 <div><p className="font-medium text-foreground group-hover:text-primary transition-colors">邮箱</p><p className="text-sm text-muted-foreground">{data.contact.email}</p></div>
               </a>
-              <a href={data.contact.github} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-4 rounded-lg border border-border hover:border-muted-foreground/30 transition-colors group">
+              <a href={data.contact.github} target="_blank" rel="noopener noreferrer" className="flex items-center group gap-3 p-4 rounded-lg border border-border hover:border-muted-foreground/30 transition-colors group">
                 <Github size={20} className="text-primary shrink-0" />
                 <div className="flex-1"><p className="font-medium text-foreground group-hover:text-primary transition-colors">GitHub</p><p className="text-sm text-muted-foreground">查看我的开源项目</p></div>
                 <ExternalLink size={16} className="text-muted-foreground" />
               </a>
-              <div className="flex items-center gap-3 p-4 rounded-lg border border-border">
+              <div className="flex items-center group gap-3 p-4 rounded-lg border border-border">
                 <MessageCircle size={20} className="text-primary shrink-0" />
                 <div><p className="font-medium text-foreground">微信</p><p className="text-sm text-muted-foreground">{data.contact.wechat}</p></div>
               </div>
-              <div className="flex items-center gap-3 p-4 rounded-lg border border-border">
+              <div className="flex items-center group gap-3 p-4 rounded-lg border border-border">
                 <Phone size={20} className="text-primary shrink-0" />
                 <div><p className="font-medium text-foreground">电话</p><p className="text-sm text-muted-foreground">{data.contact.phone}</p></div>
               </div>
