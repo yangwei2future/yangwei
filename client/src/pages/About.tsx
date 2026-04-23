@@ -65,7 +65,7 @@ function EditBtn({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="ml-2 p-1 rounded-md opacity-0 group-hover:opacity-100 focus:opacity-100 text-muted-foreground/50 hover:text-muted-foreground hover:bg-accent transition-all"
+      className="ml-2 p-1 rounded-md text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent transition-all"
     >
       <Pencil size={13} />
     </button>
@@ -106,8 +106,15 @@ export default function About() {
   const [draftContact, setDraftContact] = useState<AboutConfig["contact"]>(DEFAULT.contact);
 
   useEffect(() => {
-    setIsAdmin(isAuthenticated());
     loadData();
+  }, []);
+
+  // Re-check auth whenever the page gains focus (e.g. after logging in at /admin)
+  useEffect(() => {
+    const check = () => setIsAdmin(isAuthenticated());
+    check();
+    window.addEventListener("focus", check);
+    return () => window.removeEventListener("focus", check);
   }, []);
 
   async function loadData() {
@@ -193,7 +200,7 @@ export default function About() {
       {/* Intro */}
       <section className="py-12 border-b border-border">
         <div className="container max-w-2xl">
-          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center group">
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center">
             个人简介
             {isAdmin && editing !== "intro" && <EditBtn onClick={() => startEdit("intro")} />}
           </h2>
@@ -226,7 +233,7 @@ export default function About() {
       {/* Skills */}
       <section className="py-12 border-b border-border">
         <div className="container max-w-2xl">
-          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center group">
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center">
             技能
             {isAdmin && editing !== "skills" && <EditBtn onClick={() => startEdit("skills")} />}
           </h2>
@@ -261,7 +268,7 @@ export default function About() {
       {/* Experience */}
       <section className="py-12 border-b border-border">
         <div className="container max-w-2xl">
-          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center group">
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center">
             工作经历
             {isAdmin && editing !== "experience" && <EditBtn onClick={() => startEdit("experience")} />}
           </h2>
@@ -321,7 +328,7 @@ export default function About() {
       {/* Projects */}
       <section className="py-12 border-b border-border">
         <div className="container max-w-2xl">
-          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center group">
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center">
             项目经历
             {isAdmin && editing !== "projects" && <EditBtn onClick={() => startEdit("projects")} />}
           </h2>
@@ -408,7 +415,7 @@ export default function About() {
       {/* Contact */}
       <section className="py-12 border-b border-border">
         <div className="container max-w-2xl">
-          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center group">
+          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center">
             联系方式
             {isAdmin && editing !== "contact" && <EditBtn onClick={() => startEdit("contact")} />}
           </h2>
