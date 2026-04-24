@@ -1,6 +1,7 @@
 import { useParams, Link } from "wouter";
 import Navigation from "@/components/Navigation";
 import TableOfContents, { slugifyHeading, extractTextFromChildren } from "@/components/TableOfContents";
+import Comments from "@/components/Comments";
 import { useArticles } from "@/lib/useArticles";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -324,6 +325,9 @@ export default function Article() {
           </div>
         </section>
       )}
+
+      {/* Comments */}
+      <Comments articleId={article.id} />
 
       {/* Footer */}
       <footer className="py-12 border-t border-border">
