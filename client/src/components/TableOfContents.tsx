@@ -115,28 +115,57 @@ export default function TableOfContents({ content }: Props) {
     return () => observer.disconnect();
   }, [items]);
 
-  // ── drag via Pointer Events + capture (no global listeners needed) ────────────
+  // ── drag via Pointer Events + capture ────────────────────────────────────────
+  // Works for both the floating toggle button and the panel header grip.
+  // Target element: whatever receives onPointerDown (button or header div).
+  // We track the PANEL position, not the button position.
 
-  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
-    const el = panelRef.current;
-    if (!el) return;
+  function startDrag(e: React.PointerEvent, targetLeft: number) {
     e.preventDefault();
-    e.currentTarget.setPointerCapture(e.pointerId);
-    const rect = el.getBoundingClientRect();
-    dragRef.current = { active: true, startX: e.clientX, startLeft: rect.left };
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    dragRef.current = { active: true, startX: e.clientX, startLeft: targetLeft };
     document.body.style.cursor = "grabbing";
     document.body.style.userSelect = "none";
+  }
+
+  const onPanelPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const el = panelRef.current;
+    if (!el) return;
+    startDrag(e, el.getBoundingClientRect().left);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  // Toggle button drag: treat button's x position as proxy for desired panel left
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const onBtnPointerDown = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
+    startDrag(e, side === "left" ? 0 : window.innerWidth - PANEL_W);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [side]);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
     if (!dragRef.current.active) return;
     const delta = e.clientX - dragRef.current.startX;
     const newLeft = dragRef.current.startLeft + delta;
     const clamped = Math.max(-PANEL_W + 48, Math.min(window.innerWidth - 48, newLeft));
     moveTo(clamped);
+    // Also move the toggle button if panel is closed
+    const btn = btnRef.current;
+    if (btn) {
+      const btnX = newSideFromLeft(clamped) === "right"
+        ? window.innerWidth - 48
+        : 16;
+      btn.style.transition = "none";
+      btn.style.left = `${newSideFromLeft(clamped) === "right" ? "auto" : btnX + "px"}`;
+      if (newSideFromLeft(clamped) === "right") { btn.style.left = "auto"; btn.style.right = "16px"; }
+      else { btn.style.right = "auto"; btn.style.left = `${btnX}px`; }
+    }
   }, []);
 
-  const onPointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+  function newSideFromLeft(left: number) {
+    return left + PANEL_W / 2 > window.innerWidth / 2 ? "right" : "left";
+  }
+
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
     if (!dragRef.current.active) return;
     dragRef.current.active = false;
     document.body.style.cursor = "";
@@ -144,11 +173,17 @@ export default function TableOfContents({ content }: Props) {
 
     const delta = e.clientX - dragRef.current.startX;
     const finalLeft = dragRef.current.startLeft + delta;
-    const newSide = finalLeft + PANEL_W / 2 > window.innerWidth / 2 ? "right" : "left";
+    const newSide = newSideFromLeft(finalLeft);
 
     moveTo(getSnapped(newSide), true);
     setSide(newSide);
+
+    // Reset button style (will be re-driven by React on next render)
+    const btn = btnRef.current;
+    if (btn) { btn.style.transition = ""; btn.style.left = ""; btn.style.right = ""; }
+
     try { localStorage.setItem("toc_side", newSide); } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePin = useCallback(() => setPinned((p) => !p), []);
@@ -160,13 +195,18 @@ export default function TableOfContents({ content }: Props) {
 
   return (
     <>
-      {/* Toggle button */}
+      {/* Toggle button — click to open, drag to switch side */}
       {!visible && (
         <button
+          ref={btnRef}
           onClick={() => setOpen(true)}
+          onPointerDown={onBtnPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
           style={toggleBtnStyle}
-          className="fixed z-40 flex items-center justify-center w-8 h-8 rounded-lg bg-background/70 backdrop-blur-sm border border-border/50 shadow-sm hover:bg-accent/80 transition-all hover:scale-105"
-          title="打开目录"
+          className="fixed z-40 flex items-center justify-center w-8 h-8 rounded-lg bg-background/70 backdrop-blur-sm border border-border/50 shadow-sm hover:bg-accent/80 transition-all hover:scale-105 cursor-grab active:cursor-grabbing touch-none"
+          title="点击打开目录 · 拖拽切换左右"
         >
           <List size={15} className="text-muted-foreground" />
         </button>
@@ -186,7 +226,7 @@ export default function TableOfContents({ content }: Props) {
 
         {/* Header / drag handle */}
         <div
-          onPointerDown={onPointerDown}
+          onPointerDown={onPanelPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
