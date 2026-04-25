@@ -64,7 +64,7 @@ export default function TableOfContents({ content }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   const btnRef   = useRef<HTMLButtonElement>(null);
   // shared drag state
-  const drag = useRef({ active: false, startX: 0, startElLeft: 0, moved: false });
+  const drag = useRef({ active: false, startX: 0, startY: 0, startElLeft: 0, startElTop: 0, moved: false });
 
   const items   = parseToc(content);
   const visible = open || pinned;
@@ -79,10 +79,17 @@ export default function TableOfContents({ content }: Props) {
     el.style.left = `${px}px`;
   }
 
+  function btnSavedTop() {
+    try { return parseInt(localStorage.getItem("toc_btn_top") ?? "", 10) || 96; } catch { return 96; }
+  }
+
   // ── initialise positions before first paint ───────────────────────────────────
   useLayoutEffect(() => {
     if (panelRef.current) setElLeft(panelRef.current, panelHidden(side));
-    if (btnRef.current)   setElLeft(btnRef.current,   btnSnapped(side));
+    if (btnRef.current) {
+      setElLeft(btnRef.current, btnSnapped(side));
+      btnRef.current.style.top = `${btnSavedTop()}px`;
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -115,20 +122,24 @@ export default function TableOfContents({ content }: Props) {
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     const rect = e.currentTarget.getBoundingClientRect();
-    drag.current = { active: true, startX: e.clientX, startElLeft: rect.left, moved: false };
+    drag.current = { active: true, startX: e.clientX, startY: e.clientY, startElLeft: rect.left, startElTop: rect.top, moved: false };
     document.body.style.userSelect = "none";
   }, []);
 
   const onBtnPointerMove = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
     if (!drag.current.active) return;
-    const delta = e.clientX - drag.current.startX;
-    if (Math.abs(delta) > 4) drag.current.moved = true;
+    const dx = e.clientX - drag.current.startX;
+    const dy = e.clientY - drag.current.startY;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) drag.current.moved = true;
     if (!drag.current.moved) return;
-    const newLeft = drag.current.startElLeft + delta;
-    const clamped = Math.max(EDGE_GAP / 2, Math.min(window.innerWidth - BTN_SIZE - EDGE_GAP / 2, newLeft));
+    const newLeft = drag.current.startElLeft + dx;
+    const newTop  = drag.current.startElTop  + dy;
+    const clampedLeft = Math.max(EDGE_GAP / 2, Math.min(window.innerWidth  - BTN_SIZE - EDGE_GAP / 2, newLeft));
+    const clampedTop  = Math.max(EDGE_GAP / 2, Math.min(window.innerHeight - BTN_SIZE - EDGE_GAP / 2, newTop));
     const btn = e.currentTarget;
     btn.style.transition = "none";
-    btn.style.left = `${clamped}px`;
+    btn.style.left = `${clampedLeft}px`;
+    btn.style.top  = `${clampedTop}px`;
   }, []);
 
   const onBtnPointerUp = useCallback((e: React.PointerEvent<HTMLButtonElement>) => {
@@ -139,7 +150,6 @@ export default function TableOfContents({ content }: Props) {
     document.body.style.userSelect = "";
 
     if (!wasDrag) {
-      // treated as a click — open panel
       setOpen(true);
       return;
     }
@@ -149,7 +159,10 @@ export default function TableOfContents({ content }: Props) {
     const newSide = rect.left + BTN_SIZE / 2 > window.innerWidth / 2 ? "right" : "left";
     setElLeft(btn, btnSnapped(newSide), true);
     setSide(newSide);
-    try { localStorage.setItem("toc_side", newSide); } catch {}
+    try {
+      localStorage.setItem("toc_side", newSide);
+      localStorage.setItem("toc_btn_top", String(Math.round(rect.top)));
+    } catch {}
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -160,7 +173,7 @@ export default function TableOfContents({ content }: Props) {
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
     const rect = panel.getBoundingClientRect();
-    drag.current = { active: true, startX: e.clientX, startElLeft: rect.left, moved: false };
+    drag.current = { active: true, startX: e.clientX, startY: e.clientY, startElLeft: rect.left, startElTop: rect.top, moved: false };
     document.body.style.cursor = "grabbing";
     document.body.style.userSelect = "none";
   }, []);
@@ -208,7 +221,6 @@ export default function TableOfContents({ content }: Props) {
           onPointerMove={onBtnPointerMove}
           onPointerUp={onBtnPointerUp}
           onPointerCancel={onBtnPointerUp}
-          style={{ top: 96 }}
           className="fixed z-40 flex items-center justify-center w-8 h-8 rounded-lg bg-background/70 backdrop-blur-sm border border-border/50 shadow-sm hover:bg-accent/80 transition-colors cursor-grab active:cursor-grabbing touch-none select-none"
           title="点击打开 · 拖拽换边"
         >
