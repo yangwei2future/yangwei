@@ -197,14 +197,14 @@ export default function Article() {
                 })}
               </time>
               {article.author && (
-                <span className="inline-flex items-center gap-2 pl-1 pr-3 py-0.5 rounded-full border border-border bg-accent/60 text-foreground text-xs font-medium">
+                <span className="inline-flex items-center gap-2">
                   <img
                     src="/avatar.jpg"
                     alt={article.author}
-                    className="w-5 h-5 rounded-full object-cover ring-1 ring-border"
+                    className="w-6 h-6 rounded-full object-cover"
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                   />
-                  {article.author}
+                  <span className="text-sm text-muted-foreground">{article.author}</span>
                 </span>
               )}
             </div>
