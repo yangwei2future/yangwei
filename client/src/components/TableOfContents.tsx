@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from "react";
 import { List, X, Pin, GripHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 import React from "react";
@@ -61,13 +61,44 @@ export default function TableOfContents({ content }: Props) {
     try { return (localStorage.getItem("toc_side") as "left" | "right") ?? "left"; } catch { return "left"; }
   });
 
-  const panelRef = useRef<HTMLElement>(null);
-  const dragState = useRef({ dragging: false, startMouseX: 0, startPanelLeft: 0 });
+  // Panel ref — left is managed ONLY via direct DOM mutations, never via React style prop
+  const panelRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef({ active: false, startX: 0, startLeft: 0 });
 
   const items = parseToc(content);
   const visible = open || pinned;
 
-  // IntersectionObserver
+  // ── helpers ──────────────────────────────────────────────────────────────────
+
+  function getSnapped(s: "left" | "right") {
+    return s === "left" ? 0 : window.innerWidth - PANEL_W;
+  }
+  function getHidden(s: "left" | "right") {
+    return s === "left" ? -PANEL_W - 10 : window.innerWidth + 10;
+  }
+  function moveTo(px: number, transition = false) {
+    const el = panelRef.current;
+    if (!el) return;
+    el.style.transition = transition ? "left 0.28s cubic-bezier(0.4,0,0.2,1)" : "none";
+    el.style.left = `${px}px`;
+  }
+
+  // ── initialise position once on mount (before paint) ─────────────────────────
+
+  useLayoutEffect(() => {
+    moveTo(getHidden(side)); // start hidden
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ── slide in / out when visibility or side changes ────────────────────────────
+
+  useEffect(() => {
+    if (dragRef.current.active) return;
+    moveTo(visible ? getSnapped(side) : getHidden(side), true);
+  }, [visible, side]);
+
+  // ── IntersectionObserver ──────────────────────────────────────────────────────
+
   useEffect(() => {
     if (items.length === 0) return;
     const observer = new IntersectionObserver(
@@ -84,65 +115,41 @@ export default function TableOfContents({ content }: Props) {
     return () => observer.disconnect();
   }, [items]);
 
-  // Snap panel to final side (also called after drag release)
-  const snapToSide = useCallback((newSide: "left" | "right") => {
-    const panel = panelRef.current;
-    if (!panel) return;
-    const snapped = newSide === "left" ? 0 : window.innerWidth - PANEL_W;
-    panel.style.transition = "left 0.25s cubic-bezier(0.4,0,0.2,1)";
-    panel.style.left = `${snapped}px`;
-  }, []);
+  // ── drag via Pointer Events + capture (no global listeners needed) ────────────
 
-  // When side or visibility changes, re-snap
-  useEffect(() => {
-    const panel = panelRef.current;
-    if (!panel || dragState.current.dragging) return;
-    const snapped = side === "left" ? 0 : window.innerWidth - PANEL_W;
-    const hidden = side === "left" ? -PANEL_W - 10 : window.innerWidth + 10;
-    panel.style.transition = "left 0.3s cubic-bezier(0.4,0,0.2,1)";
-    panel.style.left = `${visible ? snapped : hidden}px`;
-  }, [side, visible]);
-
-  const onDragStart = useCallback((e: React.MouseEvent) => {
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    const el = panelRef.current;
+    if (!el) return;
     e.preventDefault();
-    const panel = panelRef.current;
-    if (!panel) return;
-
-    const rect = panel.getBoundingClientRect();
-    dragState.current = { dragging: true, startMouseX: e.clientX, startPanelLeft: rect.left };
-
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const rect = el.getBoundingClientRect();
+    dragRef.current = { active: true, startX: e.clientX, startLeft: rect.left };
     document.body.style.cursor = "grabbing";
     document.body.style.userSelect = "none";
+  }, []);
 
-    const onMouseMove = (ev: MouseEvent) => {
-      const delta = ev.clientX - dragState.current.startMouseX;
-      const newLeft = dragState.current.startPanelLeft + delta;
-      const clamped = Math.max(-PANEL_W + 48, Math.min(window.innerWidth - 48, newLeft));
-      panel.style.transition = "none";
-      panel.style.left = `${clamped}px`;
-    };
+  const onPointerMove = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current.active) return;
+    const delta = e.clientX - dragRef.current.startX;
+    const newLeft = dragRef.current.startLeft + delta;
+    const clamped = Math.max(-PANEL_W + 48, Math.min(window.innerWidth - 48, newLeft));
+    moveTo(clamped);
+  }, []);
 
-    const onMouseUp = (ev: MouseEvent) => {
-      dragState.current.dragging = false;
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
+  const onPointerUp = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current.active) return;
+    dragRef.current.active = false;
+    document.body.style.cursor = "";
+    document.body.style.userSelect = "";
 
-      const delta = ev.clientX - dragState.current.startMouseX;
-      const finalLeft = dragState.current.startPanelLeft + delta;
-      const center = finalLeft + PANEL_W / 2;
-      const newSide = center > window.innerWidth / 2 ? "right" : "left";
+    const delta = e.clientX - dragRef.current.startX;
+    const finalLeft = dragRef.current.startLeft + delta;
+    const newSide = finalLeft + PANEL_W / 2 > window.innerWidth / 2 ? "right" : "left";
 
-      snapToSide(newSide);
-      setSide(newSide);
-      try { localStorage.setItem("toc_side", newSide); } catch {}
-
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
-    };
-
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
-  }, [snapToSide]);
+    moveTo(getSnapped(newSide), true);
+    setSide(newSide);
+    try { localStorage.setItem("toc_side", newSide); } catch {}
+  }, []);
 
   const handlePin = useCallback(() => setPinned((p) => !p), []);
 
@@ -150,12 +157,6 @@ export default function TableOfContents({ content }: Props) {
 
   const toggleBtnStyle: React.CSSProperties =
     side === "right" ? { right: 16, left: "auto", top: 96 } : { left: 16, top: 96 };
-
-  // Initial inline style (before useEffect fires)
-  const initialLeft = (() => {
-    if (visible) return side === "left" ? 0 : window.innerWidth - PANEL_W;
-    return side === "left" ? -PANEL_W - 10 : window.innerWidth + 10;
-  })();
 
   return (
     <>
@@ -171,10 +172,9 @@ export default function TableOfContents({ content }: Props) {
         </button>
       )}
 
-      {/* Sidebar */}
-      <aside
-        ref={panelRef as React.RefObject<HTMLElement>}
-        style={{ left: initialLeft, transition: "left 0.3s cubic-bezier(0.4,0,0.2,1)" }}
+      {/* Sidebar — left is managed via DOM only, NOT via React style */}
+      <div
+        ref={panelRef}
         className={cn(
           "fixed top-0 h-screen w-56 z-30 flex flex-col",
           "bg-background/80 backdrop-blur-md shadow-2xl",
@@ -186,8 +186,11 @@ export default function TableOfContents({ content }: Props) {
 
         {/* Header / drag handle */}
         <div
-          onMouseDown={onDragStart}
-          className="flex items-center justify-between px-4 pt-4 pb-3 shrink-0 cursor-grab active:cursor-grabbing select-none"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerUp}
+          className="flex items-center justify-between px-4 pt-4 pb-3 shrink-0 cursor-grab active:cursor-grabbing select-none touch-none"
         >
           <div className="flex items-center gap-1.5">
             <GripHorizontal size={13} className="text-muted-foreground/40" />
@@ -197,7 +200,7 @@ export default function TableOfContents({ content }: Props) {
           </div>
           <div className="flex items-center gap-0.5">
             <button
-              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={handlePin}
               className={cn(
                 "p-1.5 rounded-md transition-all",
@@ -211,7 +214,7 @@ export default function TableOfContents({ content }: Props) {
             </button>
             {!pinned && (
               <button
-                onMouseDown={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={() => setOpen(false)}
                 className="p-1.5 rounded-md text-muted-foreground/50 hover:text-muted-foreground hover:bg-accent/60 transition-all"
               >
@@ -276,7 +279,7 @@ export default function TableOfContents({ content }: Props) {
 
         {/* Bottom fade */}
         <div className="h-6 bg-gradient-to-t from-background/80 to-transparent shrink-0 pointer-events-none" />
-      </aside>
+      </div>
 
       {/* Backdrop */}
       {open && !pinned && (
