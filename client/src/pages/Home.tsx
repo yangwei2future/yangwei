@@ -54,11 +54,11 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      <div className="container max-w-5xl py-8 md:py-10">
+      <div className="container max-w-5xl py-5 md:py-6">
         <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-10 md:gap-16">
 
           {/* ── Left: Profile ── */}
-          <aside className="space-y-6">
+          <aside className="space-y-4">
             {/* Avatar + name */}
             <div className="flex items-center gap-4 md:flex-col md:items-start md:gap-3">
               <img
