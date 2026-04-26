@@ -44,7 +44,7 @@ function ArticleRow({ id, title, excerpt, date, createdAt, categories }: {
 
 export default function Home() {
   const { articles, loading } = useArticles();
-  const recentArticles = articles.slice(0, 8);
+  const recentArticles = articles.slice(0, 5);
   const [wechatOpen, setWechatOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
 
@@ -54,7 +54,7 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      <div className="container max-w-5xl py-12 md:py-16">
+      <div className="container max-w-5xl py-8 md:py-10">
         <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-10 md:gap-16">
 
           {/* ── Left: Profile ── */}
@@ -177,7 +177,7 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      <footer className="py-8 border-t border-border mt-8">
+      <footer className="py-5 border-t border-border mt-4">
         <div className="container text-center">
           <p className="text-xs text-muted-foreground">© 2026 个人博客. 保留所有权利。</p>
         </div>
