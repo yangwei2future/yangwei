@@ -75,7 +75,7 @@ export default function Home() {
 
             {/* Intro */}
             <p className="text-sm text-muted-foreground leading-relaxed">
-              专注数据服务平台建设与 AI 大模型落地，记录技术成长和思考的地方。
+              Java Web 开发，因为 AI 变成了全栈。记录技术成长和思考的地方。
             </p>
 
             {/* Social links */}
