@@ -16,30 +16,23 @@ function ArticleRow({ id, title, excerpt, date, createdAt, categories }: {
   const cats = (categories ?? []).map(getCategoryById).filter(Boolean) as NonNullable<ReturnType<typeof getCategoryById>>[];
 
   return (
-    <Link href={`/article/${id}`} className="group flex items-start gap-4 py-4 border-b border-border/50 last:border-0 hover:bg-accent/20 -mx-3 px-3 rounded-lg transition-colors duration-150">
-      {/* Date column */}
-      <time className="shrink-0 w-16 text-xs text-muted-foreground/60 tabular-nums pt-0.5">
-        {d.toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })}
-      </time>
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
+    <Link href={`/article/${id}`} className="group flex items-center gap-3 py-2.5 border-b border-border/50 last:border-0 hover:bg-accent/20 -mx-3 px-3 rounded-lg transition-colors duration-150">
+      {/* Title + categories */}
+      <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
+        <h3 className="text-sm font-medium text-foreground group-hover:text-primary transition-colors leading-snug truncate">
           {title}
         </h3>
-        {cats.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1">
-            {cats.map((cat) => (
-              <span key={cat.id} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded-full ${getBadgeClass(cat.color)}`}>
-                {cat.icon} {cat.label}
-              </span>
-            ))}
-          </div>
-        )}
-        {excerpt && (
-          <p className="mt-0.5 text-xs text-muted-foreground/60 line-clamp-1">{excerpt}</p>
-        )}
+        {cats.map((cat) => (
+          <span key={cat.id} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded-full shrink-0 ${getBadgeClass(cat.color)}`}>
+            {cat.icon} {cat.label}
+          </span>
+        ))}
       </div>
-      <ArrowRight size={13} className="shrink-0 mt-0.5 text-muted-foreground/30 group-hover:text-primary/60 transition-colors" />
+      {/* Date */}
+      <time className="shrink-0 text-xs text-muted-foreground/50 tabular-nums">
+        {d.toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })}
+      </time>
+      <ArrowRight size={12} className="shrink-0 text-muted-foreground/30 group-hover:text-primary/60 transition-colors" />
     </Link>
   );
 }
