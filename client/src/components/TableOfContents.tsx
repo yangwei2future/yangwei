@@ -213,20 +213,19 @@ export default function TableOfContents({ content }: Props) {
 
   return (
     <>
-      {/* Floating toggle button — click to open, drag to switch side */}
-      {!visible && (
-        <button
-          ref={btnRef}
-          onPointerDown={onBtnPointerDown}
-          onPointerMove={onBtnPointerMove}
-          onPointerUp={onBtnPointerUp}
-          onPointerCancel={onBtnPointerUp}
-          className="fixed z-40 flex items-center justify-center w-8 h-8 rounded-lg bg-background/70 backdrop-blur-sm border border-border/50 shadow-sm hover:bg-accent/80 transition-colors cursor-grab active:cursor-grabbing touch-none select-none"
-          title="点击打开 · 拖拽换边"
-        >
-          <List size={15} className="text-muted-foreground" />
-        </button>
-      )}
+      {/* Floating toggle button — always mounted so DOM position persists */}
+      <button
+        ref={btnRef}
+        onPointerDown={onBtnPointerDown}
+        onPointerMove={onBtnPointerMove}
+        onPointerUp={onBtnPointerUp}
+        onPointerCancel={onBtnPointerUp}
+        className="fixed z-40 flex items-center justify-center w-8 h-8 rounded-lg bg-background/70 backdrop-blur-sm border border-border/50 shadow-sm hover:bg-accent/80 transition-colors cursor-grab active:cursor-grabbing touch-none select-none"
+        style={{ visibility: visible ? "hidden" : "visible", pointerEvents: visible ? "none" : "auto" }}
+        title="点击打开 · 拖拽换边"
+      >
+        <List size={15} className="text-muted-foreground" />
+      </button>
 
       {/* Sidebar panel — left managed via DOM only */}
       <div

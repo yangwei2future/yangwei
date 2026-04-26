@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lock, LogOut, Loader2, RefreshCw, Pencil, Check, X, EyeOff, Eye, Tag, FolderOpen, BookMarked } from "lucide-react";
+import { Lock, LogOut, Loader2, RefreshCw, Pencil, Check, X, EyeOff, Eye, Tag, FolderOpen, BookMarked, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   verifyPassword,
@@ -51,6 +51,10 @@ export default function Admin() {
   const [catColor, setCatColor] = useState("gray");
   const [catSaving, setCatSaving] = useState(false);
   const [catError, setCatError] = useState("");
+  // search + pagination
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 8;
 
   async function handleSync() {
     setSyncing(true);
@@ -252,7 +256,20 @@ export default function Admin() {
 
         <Card>
           <CardHeader>
-            <CardTitle>已添加的文章 ({links.length})</CardTitle>
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <CardTitle>已添加的文章 ({links.length})</CardTitle>
+              {links.length > 0 && (
+                <div className="relative">
+                  <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    value={searchQuery}
+                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+                    placeholder="搜索文章标题…"
+                    className="pl-8 pr-3 py-1.5 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 w-52"
+                  />
+                </div>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {loadingLinks ? (
@@ -264,9 +281,28 @@ export default function Admin() {
                 <p>暂无文章链接</p>
                 <p className="text-sm mt-2">请添加 GitHub Markdown 链接来发布文章</p>
               </div>
-            ) : (
+            ) : (() => {
+              const q = searchQuery.trim().toLowerCase();
+              const filtered = q
+                ? links.filter((link) => {
+                    const articleTitle = articles.find((a) =>
+                      link.url.includes(encodeURIComponent(a.id)) || link.url.endsWith(a.id + ".md")
+                    )?.title;
+                    const title = (articleTitle || link.title || link.url).toLowerCase();
+                    return title.includes(q);
+                  })
+                : links;
+              const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+              const page = Math.min(currentPage, totalPages);
+              const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+              return (
+              <>
+              {filtered.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-8">没有匹配的文章</p>
+              ) : (
               <div className="space-y-3">
-                {links.map((link) => (
+                {paged.map((link) => (
                   <div key={link.url} className={`p-3 border rounded-lg space-y-2 ${link.hidden ? "opacity-50" : ""}`}>
                     {/* Title row */}
                     {editingUrl === link.url ? (
@@ -483,7 +519,47 @@ export default function Admin() {
                   </div>
                 ))}
               </div>
-            )}
+              )}
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
+                  <p className="text-xs text-muted-foreground">
+                    第 {page} / {totalPages} 页，共 {filtered.length} 篇
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <button
+                      disabled={page <= 1}
+                      onClick={() => setCurrentPage(page - 1)}
+                      className="p-1.5 rounded-md border border-border text-muted-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronLeft size={14} />
+                    </button>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setCurrentPage(p)}
+                        className={`w-7 h-7 text-xs rounded-md border transition-colors ${
+                          p === page
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "border-border text-muted-foreground hover:bg-accent"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                    <button
+                      disabled={page >= totalPages}
+                      onClick={() => setCurrentPage(page + 1)}
+                      className="p-1.5 rounded-md border border-border text-muted-foreground hover:bg-accent disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+              </>
+              );
+            })()}
           </CardContent>
         </Card>
 
