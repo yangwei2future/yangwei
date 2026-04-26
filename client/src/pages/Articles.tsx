@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import Footer from "@/components/Footer";
 import { Link } from "wouter";
 import Navigation from "@/components/Navigation";
 import ArticleCard from "@/components/ArticleCard";
@@ -280,11 +281,7 @@ export default function Articles() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-border">
-        <div className="container text-center">
-          <p className="text-sm text-muted-foreground">© 2026 个人博客. 保留所有权利。</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

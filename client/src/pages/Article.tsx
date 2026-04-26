@@ -1,4 +1,5 @@
 import { useParams, Link } from "wouter";
+import Footer from "@/components/Footer";
 import Navigation from "@/components/Navigation";
 import TableOfContents, { slugifyHeading, extractTextFromChildren } from "@/components/TableOfContents";
 import Comments from "@/components/Comments";
@@ -330,13 +331,7 @@ export default function Article() {
       <Comments articleId={article.id} />
 
       {/* Footer */}
-      <footer className="py-12 border-t border-border">
-        <div className="container text-center">
-          <p className="text-sm text-muted-foreground">
-            © 2026 个人博客. 保留所有权利。
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Footer from "@/components/Footer";
 import type React from "react";
 import Navigation from "@/components/Navigation";
 import { Mail, Github, ExternalLink, Pencil, Check, X, Plus, Trash2, Phone, MessageCircle, Copy } from "lucide-react";
@@ -527,11 +528,7 @@ export default function About() {
         </div>
       </section>
 
-      <footer className="py-12 border-t border-border">
-        <div className="container text-center">
-          <p className="text-sm text-muted-foreground">© 2026 个人博客. 保留所有权利。</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

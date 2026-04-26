@@ -4,6 +4,7 @@ import { useArticles, preloadArticles } from "@/lib/useArticles";
 import { useCategories } from "@/contexts/CategoriesContext";
 import { getBadgeClass } from "@/lib/categories";
 import { Mail, Github, MessageCircle, ArrowRight, Loader2 } from "lucide-react";
+import Footer from "@/components/Footer";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -177,11 +178,7 @@ export default function Home() {
         </DialogContent>
       </Dialog>
 
-      <footer className="py-5 border-t border-border mt-4">
-        <div className="container text-center">
-          <p className="text-xs text-muted-foreground">© 2026 个人博客. 保留所有权利。</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

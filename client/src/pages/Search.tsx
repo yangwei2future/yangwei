@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import Footer from "@/components/Footer";
 import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
 import ArticleCard from "@/components/ArticleCard";
@@ -153,13 +154,7 @@ export default function Search() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-border">
-        <div className="container text-center">
-          <p className="text-sm text-muted-foreground">
-            © 2026 个人博客. 保留所有权利。
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
