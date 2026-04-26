@@ -255,7 +255,7 @@ export default function About() {
   function cancelEdit() { setEditing(null); }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-10">
       <Navigation />
 
       {/* Header */}

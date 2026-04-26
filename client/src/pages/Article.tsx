@@ -140,7 +140,7 @@ export default function Article() {
 
   if (!article) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background pb-10">
         <Navigation />
         <div className="container py-20 text-center">
           <h1 className="text-2xl font-bold text-foreground">文章未找到</h1>
@@ -162,7 +162,7 @@ export default function Article() {
     .slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-10">
       <Navigation />
       <TableOfContents content={article.content} />
 

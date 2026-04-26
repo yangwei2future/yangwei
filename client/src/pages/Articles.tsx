@@ -162,7 +162,7 @@ export default function Articles() {
   const selectedCat = selectedCategory ? getCategoryById(selectedCategory) : null;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-10">
       <Navigation />
 
       {/* Header */}

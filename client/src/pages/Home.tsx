@@ -51,7 +51,7 @@ export default function Home() {
   useEffect(() => { preloadArticles(); }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-10">
       <Navigation />
 
       <div className="container max-w-5xl py-5 md:py-6">

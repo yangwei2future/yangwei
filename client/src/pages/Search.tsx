@@ -66,7 +66,7 @@ export default function Search() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-10">
       <Navigation />
 
       {/* Search Header */}
