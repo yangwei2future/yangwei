@@ -7,8 +7,8 @@ import { Mail, Github, MessageCircle, ArrowRight, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-function ArticleRow({ id, title, date, createdAt, categories }: {
-  id: string; title: string; date: string;
+function ArticleRow({ id, title, excerpt, date, createdAt, categories }: {
+  id: string; title: string; excerpt: string; date: string;
   createdAt?: string; categories?: string[];
 }) {
   const { getCategoryById } = useCategories();
@@ -33,6 +33,9 @@ function ArticleRow({ id, title, date, createdAt, categories }: {
             </span>
           ))}
         </div>
+      )}
+      {excerpt && (
+        <p className="mt-0.5 text-xs text-muted-foreground/60 line-clamp-1">{excerpt}</p>
       )}
     </Link>
   );
@@ -133,6 +136,7 @@ export default function Home() {
                     key={a.id}
                     id={a.id}
                     title={a.title}
+                    excerpt={a.excerpt}
                     date={a.date}
                     createdAt={a.createdAt}
                     categories={a.categories}
