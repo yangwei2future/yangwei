@@ -159,6 +159,11 @@
   {
     "url": "https://github.com/yangwei2future/interview/blob/main/src/kafka/kafka-review.md",
     "createdAt": "2026-04-26T03:46:00.379Z",
-    "title": "Kafka 核心知识点"
+    "title": "Kafka 核心知识点",
+    "updatedAt": "2026-04-26T03:46:08.337Z",
+    "categories": [
+      "backend",
+      "tools"
+    ]
   }
 ]
