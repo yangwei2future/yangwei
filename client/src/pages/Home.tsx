@@ -23,16 +23,18 @@ function ArticleRow({ id, title, excerpt, date, createdAt, categories }: {
       </time>
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-start gap-2 flex-wrap">
-          <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
-            {title}
-          </h3>
-          {cats.map((cat) => (
-            <span key={cat.id} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded-full shrink-0 ${getBadgeClass(cat.color)}`}>
-              {cat.icon} {cat.label}
-            </span>
-          ))}
-        </div>
+        <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
+          {title}
+        </h3>
+        {cats.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {cats.map((cat) => (
+              <span key={cat.id} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded-full ${getBadgeClass(cat.color)}`}>
+                {cat.icon} {cat.label}
+              </span>
+            ))}
+          </div>
+        )}
         {excerpt && (
           <p className="mt-0.5 text-xs text-muted-foreground/60 line-clamp-1">{excerpt}</p>
         )}
@@ -69,13 +71,14 @@ export default function Home() {
               />
               <div>
                 <h1 className="text-xl font-bold text-foreground">个人博客</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">大数据开发工程师</p>
+                <p className="text-sm text-muted-foreground mt-0.5">全栈工程师</p>
               </div>
             </div>
 
             {/* Intro */}
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Java Web 开发，因为 AI 变成了全栈。记录技术成长和思考的地方。
+              Java Web 开发，因为 AI 变成了全栈。
+              <br />记录技术成长和思考的地方。
             </p>
 
             {/* Social links */}
