@@ -7,8 +7,8 @@ import { Mail, Github, MessageCircle, ArrowRight, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-function ArticleRow({ id, title, excerpt, date, createdAt, categories }: {
-  id: string; title: string; excerpt: string; date: string;
+function ArticleRow({ id, title, date, createdAt, categories }: {
+  id: string; title: string; date: string;
   createdAt?: string; categories?: string[];
 }) {
   const { getCategoryById } = useCategories();
@@ -16,7 +16,7 @@ function ArticleRow({ id, title, excerpt, date, createdAt, categories }: {
   const cats = (categories ?? []).map(getCategoryById).filter(Boolean) as NonNullable<ReturnType<typeof getCategoryById>>[];
 
   return (
-    <Link href={`/article/${id}`} className="group block py-3 border-b border-border/50 last:border-0 hover:bg-accent/20 -mx-3 px-3 rounded-lg transition-colors duration-150">
+    <Link href={`/article/${id}`} className="group block py-2 border-b border-border/50 last:border-0 hover:bg-accent/20 -mx-3 px-3 rounded-lg transition-colors duration-150">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-snug truncate">
           {title}
@@ -26,16 +26,13 @@ function ArticleRow({ id, title, excerpt, date, createdAt, categories }: {
         </time>
       </div>
       {cats.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-1">
+        <div className="flex flex-wrap gap-1 mt-0.5">
           {cats.map((cat) => (
             <span key={cat.id} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded-full ${getBadgeClass(cat.color)}`}>
               {cat.icon} {cat.label}
             </span>
           ))}
         </div>
-      )}
-      {excerpt && (
-        <p className="mt-0.5 text-xs text-muted-foreground/60 line-clamp-1">{excerpt}</p>
       )}
     </Link>
   );
@@ -136,7 +133,6 @@ export default function Home() {
                     key={a.id}
                     id={a.id}
                     title={a.title}
-                    excerpt={a.excerpt}
                     date={a.date}
                     createdAt={a.createdAt}
                     categories={a.categories}
