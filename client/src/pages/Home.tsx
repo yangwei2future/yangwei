@@ -1,99 +1,162 @@
 import { Link } from "wouter";
 import Navigation from "@/components/Navigation";
-import ArticleCard from "@/components/ArticleCard";
-import { useArticles } from "@/lib/useArticles";
-import { preloadArticles } from "@/lib/useArticles";
-import { Mail, Github, MessageCircle } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useArticles, preloadArticles } from "@/lib/useArticles";
+import { useCategories } from "@/contexts/CategoriesContext";
+import { getBadgeClass } from "@/lib/categories";
+import { Mail, Github, MessageCircle, ArrowRight, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-/**
- * Home Page
- *
- * Design: Modern Minimalism
- * - Clean hero section with personal introduction
- * - Recent articles showcase
- * - Call-to-action for contact
- */
+function ArticleRow({ id, title, excerpt, date, createdAt, categories }: {
+  id: string; title: string; excerpt: string; date: string;
+  createdAt?: string; categories?: string[];
+}) {
+  const { getCategoryById } = useCategories();
+  const d = new Date(createdAt ?? date);
+  const cats = (categories ?? []).map(getCategoryById).filter(Boolean) as NonNullable<ReturnType<typeof getCategoryById>>[];
+
+  return (
+    <Link href={`/article/${id}`} className="group flex items-start gap-4 py-4 border-b border-border/50 last:border-0 hover:bg-accent/20 -mx-3 px-3 rounded-lg transition-colors duration-150">
+      {/* Date column */}
+      <time className="shrink-0 w-16 text-xs text-muted-foreground/60 tabular-nums pt-0.5">
+        {d.toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })}
+      </time>
+      {/* Content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start gap-2 flex-wrap">
+          <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
+            {title}
+          </h3>
+          {cats.map((cat) => (
+            <span key={cat.id} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded-full shrink-0 ${getBadgeClass(cat.color)}`}>
+              {cat.icon} {cat.label}
+            </span>
+          ))}
+        </div>
+        {excerpt && (
+          <p className="mt-0.5 text-xs text-muted-foreground/60 line-clamp-1">{excerpt}</p>
+        )}
+      </div>
+      <ArrowRight size={13} className="shrink-0 mt-0.5 text-muted-foreground/30 group-hover:text-primary/60 transition-colors" />
+    </Link>
+  );
+}
 
 export default function Home() {
   const { articles, loading } = useArticles();
-  const recentArticles = articles.slice(0, 6);
+  const recentArticles = articles.slice(0, 8);
   const [wechatOpen, setWechatOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
 
-  // Preload articles when user visits Home page
-  useEffect(() => {
-    preloadArticles();
-  }, []);
+  useEffect(() => { preloadArticles(); }, []);
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      {/* Hero Section */}
-      <section className="py-20 border-b border-border">
-        <div className="container max-w-2xl">
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-                欢迎来到我的博客
-              </h1>
-              <p className="mt-4 text-lg text-muted-foreground">
-                分享关于后端开发、技术思考和职业成长的文章。
-              </p>
+      <div className="container max-w-5xl py-12 md:py-16">
+        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-10 md:gap-16">
+
+          {/* ── Left: Profile ── */}
+          <aside className="space-y-6">
+            {/* Avatar + name */}
+            <div className="flex items-center gap-4 md:flex-col md:items-start md:gap-3">
+              <img
+                src="/avatar.jpg"
+                alt="avatar"
+                className="w-14 h-14 md:w-20 md:h-20 rounded-full object-cover ring-2 ring-border"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+              />
+              <div>
+                <h1 className="text-xl font-bold text-foreground">个人博客</h1>
+                <p className="text-sm text-muted-foreground mt-0.5">大数据开发工程师</p>
+              </div>
             </div>
 
-            {/* Social Links */}
-            <div className="flex gap-4 pt-4">
+            {/* Intro */}
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              专注数据服务平台建设与 AI 大模型落地，记录技术成长和思考的地方。
+            </p>
+
+            {/* Social links */}
+            <div className="flex flex-col gap-1">
               <button
                 onClick={() => setEmailOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors text-left"
               >
-                <Mail size={18} />
-                邮箱
+                <Mail size={15} className="shrink-0" />
+                邮箱联系
               </button>
               <a
-                href="https://github.com"
+                href="https://github.com/yangwei2future"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
               >
-                <Github size={18} />
+                <Github size={15} className="shrink-0" />
                 GitHub
               </a>
               <button
                 onClick={() => setWechatOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors text-left"
               >
-                <MessageCircle size={18} />
+                <MessageCircle size={15} className="shrink-0" />
                 微信
               </button>
             </div>
-          </div>
-        </div>
-      </section>
 
-      {/* WeChat QR Dialog */}
+            {/* Nav links */}
+            <div className="pt-2 border-t border-border space-y-1">
+              <Link href="/articles" className="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                所有文章 <ArrowRight size={13} />
+              </Link>
+              <Link href="/about" className="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                关于我 <ArrowRight size={13} />
+              </Link>
+            </div>
+          </aside>
+
+          {/* ── Right: Recent Articles ── */}
+          <main>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-foreground">最新文章</h2>
+              <Link href="/articles" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                查看全部 <ArrowRight size={11} />
+              </Link>
+            </div>
+
+            {loading ? (
+              <div className="flex items-center gap-2 py-8 text-muted-foreground text-sm">
+                <Loader2 size={15} className="animate-spin" />加载中…
+              </div>
+            ) : recentArticles.length > 0 ? (
+              <div>
+                {recentArticles.map((a) => (
+                  <ArticleRow
+                    key={a.id}
+                    id={a.id}
+                    title={a.title}
+                    excerpt={a.excerpt}
+                    date={a.date}
+                    createdAt={a.createdAt}
+                    categories={a.categories}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground py-8">暂无文章</p>
+            )}
+          </main>
+        </div>
+      </div>
+
+      {/* WeChat Dialog */}
       <Dialog open={wechatOpen} onOpenChange={setWechatOpen}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>微信二维码</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col items-center justify-center py-6">
-            <img
-              src="/wechat-qr.png"
-              alt="微信二维码"
-              className="w-64 h-64 object-contain"
-            />
-            <p className="text-sm text-muted-foreground mt-4">
-              扫码添加微信
-            </p>
+          <DialogHeader><DialogTitle>微信</DialogTitle></DialogHeader>
+          <div className="flex flex-col items-center py-6">
+            <img src="/wechat-qr.png" alt="微信二维码" className="w-56 h-56 object-contain" />
+            <p className="text-sm text-muted-foreground mt-4">扫码添加微信</p>
           </div>
         </DialogContent>
       </Dialog>
@@ -101,74 +164,22 @@ export default function Home() {
       {/* Email Dialog */}
       <Dialog open={emailOpen} onOpenChange={setEmailOpen}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>邮箱地址</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col items-center justify-center py-6">
+          <DialogHeader><DialogTitle>邮箱</DialogTitle></DialogHeader>
+          <div className="flex flex-col items-center py-6">
             <button
-              onClick={() => {
-                navigator.clipboard.writeText("ywei_20@126.com");
-                alert("邮箱已复制到剪贴板");
-              }}
-              className="text-2xl font-semibold text-foreground hover:text-primary transition-colors cursor-pointer"
+              onClick={() => { navigator.clipboard.writeText("ywei_20@126.com"); alert("已复制"); }}
+              className="text-xl font-semibold text-foreground hover:text-primary transition-colors"
             >
               ywei_20@126.com
             </button>
-            <p className="text-sm text-muted-foreground mt-4">
-              点击复制邮箱地址
-            </p>
+            <p className="text-sm text-muted-foreground mt-3">点击复制</p>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Recent Articles Section */}
-      <section className="py-20">
-        <div className="container">
-          <div className="mb-12">
-            <h2 className="text-3xl font-bold text-foreground">最新文章</h2>
-            <p className="mt-2 text-muted-foreground">
-              探索我最近发布的技术文章和思考
-            </p>
-          </div>
-
-          {/* Articles Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-            {loading ? (
-              <p className="text-muted-foreground">加载中...</p>
-            ) : recentArticles.length > 0 ? (
-              recentArticles.map((article) => (
-                <ArticleCard
-                  key={article.id}
-                  id={article.id}
-                  title={article.title}
-                  excerpt={article.excerpt}
-                  date={article.date}
-                  createdAt={article.createdAt}
-                  updatedAt={article.updatedAt}
-                  categories={article.categories}
-                  tags={article.tags}
-                />
-              ))
-            ) : (
-              <p className="text-muted-foreground">暂无文章</p>
-            )}
-          </div>
-
-          {/* View All Articles Link */}
-          <div className="text-center">
-            <Link href="/articles" className="inline-block px-6 py-3 text-sm font-medium text-primary hover:text-primary/80 transition-colors border border-primary rounded-lg hover:bg-primary/5">
-              查看所有文章 →
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-12 border-t border-border">
+      <footer className="py-8 border-t border-border mt-8">
         <div className="container text-center">
-          <p className="text-sm text-muted-foreground">
-            © 2026 个人博客. 保留所有权利。
-          </p>
+          <p className="text-xs text-muted-foreground">© 2026 个人博客. 保留所有权利。</p>
         </div>
       </footer>
     </div>
