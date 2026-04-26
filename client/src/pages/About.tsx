@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
+import type React from "react";
 import Navigation from "@/components/Navigation";
-import { Mail, Github, ExternalLink, Pencil, Check, X, Plus, Trash2, Phone, MessageCircle } from "lucide-react";
+import { Mail, Github, ExternalLink, Pencil, Check, X, Plus, Trash2, Phone, MessageCircle, Copy } from "lucide-react";
 import { isAuthenticated } from "@/lib/article-links";
 
 interface AboutConfig {
@@ -85,6 +86,92 @@ function SaveRow({ onSave, onCancel, saving }: { onSave: () => void; onCancel: (
       <button onClick={onCancel} className="text-xs text-muted-foreground hover:text-foreground">
         <X size={11} className="inline mr-0.5" />取消
       </button>
+    </div>
+  );
+}
+
+// ── contact cards ──────────────────────────────────────────────────────────────
+
+function CopyableCard({
+  icon, iconBg, label, value, hint,
+}: { icon: React.ReactNode; iconBg: string; label: string; value: string; hint?: string }) {
+  const [copied, setCopied] = useState(false);
+  function handleCopy() {
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    });
+  }
+  return (
+    <button
+      onClick={handleCopy}
+      className="group relative flex flex-col items-start gap-3 p-5 rounded-2xl border border-border bg-card hover:border-muted-foreground/30 hover:shadow-sm transition-all duration-200 text-left w-full"
+    >
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}>
+        {icon}
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground mb-0.5">{label}</p>
+        <p className="text-sm font-medium text-foreground">{hint ?? value}</p>
+      </div>
+      <span className={`absolute top-3 right-3 flex items-center gap-1 text-xs transition-opacity duration-150 ${copied ? "opacity-100 text-primary" : "opacity-0 group-hover:opacity-60 text-muted-foreground"}`}>
+        {copied ? <Check size={11} /> : <Copy size={11} />}
+        {copied ? "已复制" : "复制"}
+      </span>
+    </button>
+  );
+}
+
+function ContactCards({ contact }: { contact: AboutConfig["contact"] }) {
+  return (
+    <div className="grid grid-cols-2 gap-3">
+      {/* Email */}
+      <a
+        href={`mailto:${contact.email}`}
+        className="group flex flex-col items-start gap-3 p-5 rounded-2xl border border-border bg-card hover:border-muted-foreground/30 hover:shadow-sm transition-all duration-200"
+      >
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-500/10">
+          <Mail size={18} className="text-blue-500" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-muted-foreground mb-0.5">邮箱</p>
+          <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">{contact.email}</p>
+        </div>
+        <ExternalLink size={13} className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors self-end" />
+      </a>
+
+      {/* GitHub */}
+      <a
+        href={contact.github}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="group flex flex-col items-start gap-3 p-5 rounded-2xl border border-border bg-card hover:border-muted-foreground/30 hover:shadow-sm transition-all duration-200"
+      >
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-foreground/8 dark:bg-foreground/10">
+          <Github size={18} className="text-foreground" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs text-muted-foreground mb-0.5">GitHub</p>
+          <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">查看开源项目</p>
+        </div>
+        <ExternalLink size={13} className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors self-end" />
+      </a>
+
+      {/* WeChat */}
+      <CopyableCard
+        icon={<MessageCircle size={18} className="text-green-500" />}
+        iconBg="bg-green-500/10"
+        label="微信"
+        value={contact.wechat}
+      />
+
+      {/* Phone */}
+      <CopyableCard
+        icon={<Phone size={18} className="text-violet-500" />}
+        iconBg="bg-violet-500/10"
+        label="电话"
+        value={contact.phone}
+      />
     </div>
   );
 }
@@ -423,7 +510,7 @@ export default function About() {
           {editing === "contact" ? (
             <div className="space-y-3">
               {(["email", "github", "wechat", "phone"] as const).map((field) => (
-                <div key={field} className="flex items-center group gap-3">
+                <div key={field} className="flex items-center gap-3">
                   <span className="w-14 text-xs text-muted-foreground shrink-0">{{ email: "邮箱", github: "GitHub", wechat: "微信", phone: "电话" }[field]}</span>
                   <input
                     className="flex-1 border border-border rounded px-2.5 py-1.5 text-sm bg-background focus:outline-none focus:ring-1 focus:ring-primary/30"
@@ -435,25 +522,7 @@ export default function About() {
               <SaveRow saving={saving} onSave={() => persist({ ...data, contact: draftContact })} onCancel={cancelEdit} />
             </div>
           ) : (
-            <div className="space-y-3">
-              <a href={`mailto:${data.contact.email}`} className="flex items-center group gap-3 p-4 rounded-lg border border-border hover:border-muted-foreground/30 transition-colors group">
-                <Mail size={20} className="text-primary shrink-0" />
-                <div><p className="font-medium text-foreground group-hover:text-primary transition-colors">邮箱</p><p className="text-sm text-muted-foreground">{data.contact.email}</p></div>
-              </a>
-              <a href={data.contact.github} target="_blank" rel="noopener noreferrer" className="flex items-center group gap-3 p-4 rounded-lg border border-border hover:border-muted-foreground/30 transition-colors group">
-                <Github size={20} className="text-primary shrink-0" />
-                <div className="flex-1"><p className="font-medium text-foreground group-hover:text-primary transition-colors">GitHub</p><p className="text-sm text-muted-foreground">查看我的开源项目</p></div>
-                <ExternalLink size={16} className="text-muted-foreground" />
-              </a>
-              <div className="flex items-center group gap-3 p-4 rounded-lg border border-border">
-                <MessageCircle size={20} className="text-primary shrink-0" />
-                <div><p className="font-medium text-foreground">微信</p><p className="text-sm text-muted-foreground">{data.contact.wechat}</p></div>
-              </div>
-              <div className="flex items-center group gap-3 p-4 rounded-lg border border-border">
-                <Phone size={20} className="text-primary shrink-0" />
-                <div><p className="font-medium text-foreground">电话</p><p className="text-sm text-muted-foreground">{data.contact.phone}</p></div>
-              </div>
-            </div>
+            <ContactCards contact={data.contact} />
           )}
         </div>
       </section>
