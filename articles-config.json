@@ -166,5 +166,10 @@
       "tools"
     ],
     "hidden": true
+  },
+  {
+    "url": "https://github.com/yangwei2future/interview/blob/main/src/jvm/jvm.md",
+    "createdAt": "2026-04-28T16:14:58.414Z",
+    "title": "JVM 核心知识"
   }
 ]
