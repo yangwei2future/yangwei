@@ -44,7 +44,7 @@ function ArticleRow({ id, title, excerpt, date, createdAt, categories }: {
 
 export default function Home() {
   const { articles, loading } = useArticles();
-  const recentArticles = articles.slice(0, 5);
+  const recentArticles = articles.slice(0, 10);
   const [wechatOpen, setWechatOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
 
