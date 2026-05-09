@@ -175,5 +175,10 @@
     "categories": [
       "backend"
     ]
+  },
+  {
+    "url": "https://github.com/yangwei2future/interview/blob/main/src/jvm/jvm-tuning.md",
+    "createdAt": "2026-05-09T18:17:59.443Z",
+    "title": "JVM 调优笔记"
   }
 ]
