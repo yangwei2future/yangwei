@@ -188,6 +188,8 @@
   {
     "url": "https://github.com/yangwei2future/interview/blob/main/src/jvm/gc-collectors.md",
     "createdAt": "2026-05-10T04:04:02.362Z",
-    "title": "JVM-垃圾回收器详解"
+    "title": "JVM-垃圾回收器详解",
+    "updatedAt": "2026-05-10T04:04:30.784Z",
+    "hidden": true
   }
 ]
