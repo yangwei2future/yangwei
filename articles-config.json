@@ -183,7 +183,9 @@
   {
     "url": "https://github.com/yangwei2future/interview/blob/main/src/jvm/jvm-tuning.md",
     "createdAt": "2026-05-09T18:17:59.443Z",
-    "title": "JVM 调优笔记"
+    "title": "JVM 调优笔记",
+    "updatedAt": "2026-05-10T04:04:37.814Z",
+    "hidden": true
   },
   {
     "url": "https://github.com/yangwei2future/interview/blob/main/src/jvm/gc-collectors.md",
