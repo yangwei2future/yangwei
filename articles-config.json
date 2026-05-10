@@ -171,12 +171,13 @@
     "url": "https://github.com/yangwei2future/interview/blob/main/src/jvm/jvm.md",
     "createdAt": "2026-04-28T16:14:58.414Z",
     "title": "JVM 核心知识",
-    "updatedAt": "2026-05-10T04:03:10.562Z",
+    "updatedAt": "2026-05-10T04:04:26.459Z",
     "categories": [
       "backend"
     ],
     "refs": [
-      "jvm-tuning"
+      "jvm-tuning",
+      "gc-collectors"
     ]
   },
   {
