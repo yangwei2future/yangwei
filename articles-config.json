@@ -208,6 +208,11 @@
   {
     "url": "https://github.com/yangwei2future/interview/blob/main/docs/threadpool-diagnosis.md",
     "createdAt": "2026-05-14T16:09:45.929Z",
-    "title": "线程池任务堆积 — 线上排查指南"
+    "title": "线程池任务堆积 — 线上排查指南",
+    "updatedAt": "2026-05-14T16:09:56.470Z",
+    "categories": [
+      "tools",
+      "backend"
+    ]
   }
 ]
