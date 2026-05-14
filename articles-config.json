@@ -193,5 +193,10 @@
     "title": "JVM-垃圾回收器详解",
     "updatedAt": "2026-05-10T04:04:30.784Z",
     "hidden": true
+  },
+  {
+    "url": "https://github.com/yangwei2future/interview/blob/main/docs/gateway-learning-notes.md",
+    "createdAt": "2026-05-14T15:39:38.258Z",
+    "title": "Spring Cloud Gateway — 从原理到实践"
   }
 ]
