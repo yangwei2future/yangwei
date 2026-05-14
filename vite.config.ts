@@ -398,6 +398,90 @@ function vitePluginManusDebugCollector(): Plugin {
   };
 }
 
+function vitePluginCommentsApi(): Plugin {
+  let env: Record<string, string> = {};
+
+  return {
+    name: "comments-api",
+    config(_, { mode }) { env = loadEnv(mode, process.cwd(), ""); },
+    configureServer(server: ViteDevServer) {
+      const token = () => env.GITHUB_TOKEN || env.github_token || "";
+      const owner = () => env.GITHUB_OWNER || "yangwei2future";
+      const repo = () => env.GITHUB_REPO || "yangwei";
+      const filePath = "comments.json";
+      const proxyUrl = () => env.HTTPS_PROXY || env.https_proxy || env.HTTP_PROXY || env.http_proxy;
+
+      const githubFetch = (url: string) => {
+        const dispatcher = proxyUrl() ? new ProxyAgent(proxyUrl()!) : undefined;
+        return undiciFetch(url, { headers: { Authorization: `Bearer ${token()}`, Accept: "application/json" }, dispatcher } as Parameters<typeof undiciFetch>[1]);
+      };
+
+      const getStore = async () => {
+        const r = await githubFetch(`https://api.github.com/repos/${owner()}/${repo()}/contents/${filePath}`);
+        if ((r as any).status === 404) return { store: {}, sha: "" };
+        if (!(r as any).ok) throw new Error(`GitHub error: ${(r as any).status}`);
+        const data = await (r as any).json();
+        return { store: JSON.parse(Buffer.from(data.content, "base64").toString("utf-8")), sha: data.sha };
+      };
+
+      // /api/comments-count
+      server.middlewares.use("/api/comments-count", async (_req, res) => {
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Content-Type", "application/json");
+        try {
+          const { store } = await getStore();
+          const counts: Record<string, number> = {};
+          for (const [articleId, comments] of Object.entries(store)) {
+            counts[articleId] = (comments as unknown[]).length;
+          }
+          return res.end(JSON.stringify(counts));
+        } catch (err) {
+          res.writeHead(500);
+          res.end(JSON.stringify({ error: String(err) }));
+        }
+      });
+
+      // /api/comments
+      server.middlewares.use("/api/comments", async (req, res) => {
+        res.setHeader("Access-Control-Allow-Origin", "*");
+        res.setHeader("Content-Type", "application/json");
+        try {
+          if (req.method === "GET") {
+            const urlObj = new URL(req.url || "", `http://localhost:${server.config.server.port}`);
+            const articleId = urlObj.searchParams.get("articleId");
+            if (!articleId) { res.writeHead(400); return res.end(JSON.stringify({ error: "Missing articleId" })); }
+            const { store } = await getStore();
+            return res.end(JSON.stringify((store as Record<string, unknown[]>)[articleId] ?? []));
+          }
+          if (req.method === "POST") {
+            let body = "";
+            await new Promise<void>((resolve) => { req.on("data", (c) => (body += c)); req.on("end", resolve); });
+            const parsed = JSON.parse(body);
+            const { store, sha } = await getStore();
+            const comment = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), articleId: parsed.articleId, nickname: parsed.nickname?.trim().slice(0, 20) || "匿名", content: parsed.content.trim(), createdAt: new Date().toISOString() };
+            const list = (store[parsed.articleId] ?? []) as unknown[];
+            const newStore = { ...store, [parsed.articleId]: [...list, comment] };
+            const content = Buffer.from(JSON.stringify(newStore, null, 2)).toString("base64");
+            const putRes = await undiciFetch(`https://api.github.com/repos/${owner()}/${repo()}/contents/${filePath}`, {
+              method: "PUT",
+              headers: { Authorization: `Bearer ${token()}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ message: "Add comment", content, committer: { name: "Blog", email: "blog@blog.com" }, ...(sha ? { sha } : {}) }),
+              dispatcher: proxyUrl() ? new ProxyAgent(proxyUrl()!) : undefined,
+            } as Parameters<typeof undiciFetch>[1]);
+            if (!(putRes as any).ok) { res.writeHead(500); return res.end(JSON.stringify({ error: "Save failed" })); }
+            return res.end(JSON.stringify(comment));
+          }
+          res.writeHead(405);
+          res.end("Method Not Allowed");
+        } catch (err) {
+          res.writeHead(500);
+          res.end(JSON.stringify({ error: String(err) }));
+        }
+      });
+    },
+  };
+}
+
 const plugins = [
   react(),
   tailwindcss(),
@@ -406,6 +490,7 @@ const plugins = [
   vitePluginGitHubProxy(),
   vitePluginArticlesApi(),
   vitePluginCategoriesApi(),
+  vitePluginCommentsApi(),
   vitePluginManusDebugCollector(),
 ];
 

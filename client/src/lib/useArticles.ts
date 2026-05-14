@@ -62,8 +62,8 @@ export function useArticles() {
             };
           })
           .sort((a, b) => {
-            const aTime = new Date(a.updatedAt ?? a.createdAt).getTime();
-            const bTime = new Date(b.updatedAt ?? b.createdAt).getTime();
+            const aTime = new Date(a.createdAt).getTime();
+            const bTime = new Date(b.createdAt).getTime();
             return bTime - aTime;
           });
         console.log("Using cached articles");
@@ -89,8 +89,8 @@ export function useArticles() {
       });
 
       const sorted = [...articlesWithTs].sort((a, b) => {
-        const aTime = new Date(a.updatedAt ?? a.createdAt).getTime();
-        const bTime = new Date(b.updatedAt ?? b.createdAt).getTime();
+        const aTime = new Date(a.createdAt).getTime();
+        const bTime = new Date(b.createdAt).getTime();
         return bTime - aTime;
       });
 

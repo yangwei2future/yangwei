@@ -3,14 +3,16 @@ import Navigation from "@/components/Navigation";
 import { useArticles, preloadArticles } from "@/lib/useArticles";
 import { useCategories } from "@/contexts/CategoriesContext";
 import { getBadgeClass } from "@/lib/categories";
-import { Mail, Github, MessageCircle, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, Github, MessageCircle, ArrowRight, Loader2, Link2 } from "lucide-react";
 import Footer from "@/components/Footer";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-function ArticleRow({ id, title, excerpt, date, createdAt, categories }: {
+function ArticleRow({ id, title, excerpt, date, createdAt, categories, refsCount, commentCount }: {
   id: string; title: string; excerpt: string; date: string;
   createdAt?: string; categories?: string[];
+  refsCount: number;
+  commentCount: number;
 }) {
   const { getCategoryById } = useCategories();
   const d = new Date(createdAt ?? date);
@@ -26,13 +28,25 @@ function ArticleRow({ id, title, excerpt, date, createdAt, categories }: {
           {d.toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })}
         </time>
       </div>
-      {cats.length > 0 && (
-        <div className="flex flex-wrap gap-1 mt-0.5">
+      {(cats.length > 0 || refsCount > 0 || commentCount > 0) && (
+        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
           {cats.map((cat) => (
             <span key={cat.id} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded-full ${getBadgeClass(cat.color)}`}>
               {cat.icon} {cat.label}
             </span>
           ))}
+          {refsCount > 0 && (
+            <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground/60">
+              <Link2 size={10} />
+              {refsCount}
+            </span>
+          )}
+          {commentCount > 0 && (
+            <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground/60">
+              <MessageCircle size={10} />
+              {commentCount}
+            </span>
+          )}
         </div>
       )}
       {excerpt && (
@@ -47,8 +61,17 @@ export default function Home() {
   const recentArticles = articles.slice(0, 10);
   const [wechatOpen, setWechatOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
+
+  const fetchCommentCounts = useCallback(async () => {
+    try {
+      const counts = await fetch("/api/comments-count").then((r) => r.json());
+      setCommentCounts(counts);
+    } catch {}
+  }, []);
 
   useEffect(() => { preloadArticles(); }, []);
+  useEffect(() => { fetchCommentCounts(); }, [fetchCommentCounts]);
 
   return (
     <div className="min-h-screen bg-background pb-10">
@@ -141,6 +164,8 @@ export default function Home() {
                     date={a.date}
                     createdAt={a.createdAt}
                     categories={a.categories}
+                    refsCount={a.refs?.length ?? 0}
+                    commentCount={commentCounts[a.id] ?? 0}
                   />
                 ))}
               </div>
