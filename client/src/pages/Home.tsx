@@ -28,27 +28,23 @@ function ArticleRow({ id, title, excerpt, date, createdAt, categories, refsCount
           {d.toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })}
         </time>
       </div>
-      {(cats.length > 0 || refsCount > 0 || commentCount > 0) && (
-        <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-          {cats.map((cat) => (
-            <span key={cat.id} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded-full ${getBadgeClass(cat.color)}`}>
-              {cat.icon} {cat.label}
-            </span>
-          ))}
-          {refsCount > 0 && (
-            <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground/60">
-              <Link2 size={10} />
-              {refsCount}
-            </span>
-          )}
-          {commentCount > 0 && (
-            <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground/60">
-              <MessageCircle size={10} />
-              {commentCount}
-            </span>
-          )}
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+        {cats.map((cat) => (
+          <span key={cat.id} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded-full ${getBadgeClass(cat.color)}`}>
+            {cat.icon} {cat.label}
+          </span>
+        ))}
+        {refsCount > 0 && (
+          <span title="引用文章数" className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground/60 cursor-default">
+            <Link2 size={10} />
+            {refsCount}
+          </span>
+        )}
+        <span title="评论数" className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground/60 cursor-default">
+          <MessageCircle size={10} />
+          {commentCount}
+        </span>
+      </div>
       {excerpt && (
         <p className="mt-0.5 text-xs text-muted-foreground/60 line-clamp-1">{excerpt}</p>
       )}
