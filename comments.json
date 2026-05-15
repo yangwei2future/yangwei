@@ -7,5 +7,14 @@
       "content": "写的很好👍",
       "createdAt": "2026-04-24T16:54:52.498Z"
     }
+  ],
+  "mysql-index": [
+    {
+      "id": "mp6hxz9eujif",
+      "articleId": "mysql-index",
+      "nickname": "匿名",
+      "content": "filesort索引。\n排序字段没有走到 B+ 树的有序性，MySQL 就得自己额外排一遍，这就是 filesort。",
+      "createdAt": "2026-05-15T05:48:24.386Z"
+    }
   ]
 }
