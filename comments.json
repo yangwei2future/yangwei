@@ -15,6 +15,13 @@
       "nickname": "匿名",
       "content": "filesort索引。\n排序字段没有走到 B+ 树的有序性，MySQL 就得自己额外排一遍，这就是 filesort。",
       "createdAt": "2026-05-15T05:48:24.386Z"
+    },
+    {
+      "id": "mp6idoj3k2w1",
+      "articleId": "mysql-index",
+      "nickname": "匿名",
+      "content": "filesort触发流程：\n1. 确定排序模式（一行数据 ≤ 1024 字节 → 单路排序、 一行数据 > 1024 字节 → 双路排序）\n2. 单路排序（现在默认）\n把 SELECT 需要的字段 全部读出来，放在 sort_buffer 里排序：\n  sort_buffer 里存的是： [age, id, name, phone, ...]\n                                          ↑排序字段      ↑select要的所有字段\n  在 sort_buffer 里按 age 排好，直接返回，不用回表\n  优点：排完直接出结果，省掉一次回表\n  缺点：一行数据很宽时，塞不了几行，sort_buffer 容易满\n第三步：双路排序（老方式）\n  只拿排序字段 + 主键 ID，排完后拿着 ID 再回表查完整数据：\n          第一遍： [age, id]  在 sort_buffer 里排序\n          第二遍： 按排好的 id 顺序去聚簇索引查完整行\n  优点：一行数据小（就 age + id），sort_buffer 能塞更多行\n  缺点：多了一次回表，随机 IO 开销大\n第四步：内存不够，磁盘来凑\n  - 每次快排 → 写一个临时文件（Sort_scan）\n  - 多个临时文件 → 归并合并（Sort_merge_passes）",
+      "createdAt": "2026-05-15T06:00:36.975Z"
     }
   ]
 }
