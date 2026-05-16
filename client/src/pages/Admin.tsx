@@ -19,6 +19,7 @@ import {
   type ArticleLink,
 } from "@/lib/article-links";
 import { useArticles } from "@/lib/useArticles";
+import { generateIdFromUrl } from "@/lib/markdown-loader";
 import { useCategories } from "@/contexts/CategoriesContext";
 import { COLOR_OPTIONS, getBadgeClass } from "@/lib/categories";
 
@@ -286,7 +287,7 @@ export default function Admin() {
               const filtered = q
                 ? links.filter((link) => {
                     const articleTitle = articles.find((a) =>
-                      link.url.includes(encodeURIComponent(a.id)) || link.url.endsWith(a.id + ".md")
+                      generateIdFromUrl(link.url) === a.id
                     )?.title;
                     const title = (articleTitle || link.title || link.url).toLowerCase();
                     return title.includes(q);
@@ -320,7 +321,7 @@ export default function Admin() {
                       </div>
                     ) : (() => {
                         const articleTitle = articles.find((a) =>
-                          link.url.includes(encodeURIComponent(a.id)) || link.url.endsWith(a.id + ".md")
+                          generateIdFromUrl(link.url) === a.id
                         )?.title;
                         const displayTitle = articleTitle || link.title;
                         return (
@@ -407,9 +408,9 @@ export default function Admin() {
                             .filter((l) => l.url !== link.url)
                             .map((l) => {
                               const articleTitle = articles.find((a) =>
-                                l.url.includes(encodeURIComponent(a.id)) || l.url.endsWith(a.id + ".md")
+                                generateIdFromUrl(l.url) === a.id
                               )?.title;
-                              const refId = decodeURIComponent(l.url.split("/").pop()?.replace(".md", "") ?? "");
+                              const refId = generateIdFromUrl(l.url);
                               const title = articleTitle || l.title || refId;
                               const selected = pendingRefs.includes(refId);
                               return (
@@ -452,9 +453,9 @@ export default function Admin() {
                         {(link.refs ?? []).length > 0 ? (
                           (link.refs ?? []).map((refId) => {
                             const t = articles.find((a) => a.id === refId)?.title
-                              || allLinks.find((l) => l.url.endsWith(refId + ".md") || l.url.includes(encodeURIComponent(refId)))?.title
+                              || allLinks.find((l) => generateIdFromUrl(l.url) === refId)?.title
                               || refId;
-                            const isHidden = allLinks.find((l) => l.url.endsWith(refId + ".md") || l.url.includes(encodeURIComponent(refId)))?.hidden;
+                            const isHidden = allLinks.find((l) => generateIdFromUrl(l.url) === refId)?.hidden;
                             return (
                               <span key={refId} className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-muted text-muted-foreground">
                                 {isHidden && <Lock size={9} />}

@@ -190,9 +190,22 @@ function generateExcerpt(content: string): string {
 
 /**
  * Generate unique ID from URL
+ * Uses the full path after the branch (for GitHub URLs) to avoid collisions
+ * e.g. .../blob/main/src/concurrent/locks/README.md → src-concurrent-locks-README
  */
-function generateIdFromUrl(url: string): string {
-  const filename = url.split("/").pop()?.replace(".md", "") || "article";
+export function generateIdFromUrl(url: string): string {
+  // GitHub blob URL: https://github.com/{user}/{repo}/blob/{branch}/{path}
+  const blobMatch = url.match(/github\.com\/[^/]+\/[^/]+\/blob\/[^/]+\/(.+)/);
+  if (blobMatch) {
+    return blobMatch[1].replace(/\.md$/i, "").replace(/\//g, "-");
+  }
+  // Raw GitHub URL: https://raw.githubusercontent.com/{user}/{repo}/{branch}/{path}
+  const rawMatch = url.match(/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[^/]+\/(.+)/);
+  if (rawMatch) {
+    return rawMatch[1].replace(/\.md$/i, "").replace(/\//g, "-");
+  }
+  // Fallback: filename only
+  const filename = url.split("/").pop()?.replace(/\.md$/i, "") || "article";
   return decodeURIComponent(filename);
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchArticlesFromGitHub } from "./markdown-loader";
+import { fetchArticlesFromGitHub, generateIdFromUrl } from "./markdown-loader";
 import type { Article } from "./types";
 
 /**
@@ -47,11 +47,11 @@ export function useArticles() {
       // Check cache first, but filter out any hidden articles
       const cached = getCachedArticles();
       if (cached) {
-        const visibleIds = new Set(entries.map((e) => decodeURIComponent(e.url.split("/").pop()?.replace(".md", "") ?? "")));
+        const visibleIds = new Set(entries.map((e) => generateIdFromUrl(e.url)));
         const filteredCache = cached
           .filter((a) => visibleIds.has(a.id))
           .map((article) => {
-            const entry = entries.find((e) => e.url.includes(encodeURIComponent(article.id)) || e.url.endsWith(article.id + ".md"));
+            const entry = entries.find((e) => generateIdFromUrl(e.url) === article.id);
             return {
               ...article,
               createdAt: entry?.createdAt ?? article.createdAt,
@@ -77,7 +77,7 @@ export function useArticles() {
 
       // Merge server-side timestamps into articles
       const articlesWithTs = fetchedArticles.map((article) => {
-        const entry = entries.find((e) => e.url.includes(encodeURIComponent(article.id)) || e.url.endsWith(article.id + ".md"));
+        const entry = entries.find((e) => generateIdFromUrl(e.url) === article.id);
         return {
           ...article,
           createdAt: entry?.createdAt || new Date().toISOString(),
@@ -151,7 +151,7 @@ export function useArticles() {
     });
     setArticles((prev) => {
       const next = prev.map((a) =>
-        (a.id === url.split("/").pop()?.replace(".md", "") || a.id === decodeURIComponent(url.split("/").pop()?.replace(".md", "") ?? ""))
+        a.id === generateIdFromUrl(url)
           ? { ...a, title: title || a.title }
           : a
       );
@@ -171,7 +171,7 @@ export function useArticles() {
     });
     // Remove from public list if hidden, reload if un-hiding
     if (hidden) {
-      const id = decodeURIComponent(url.split("/").pop()?.replace(".md", "") ?? "");
+      const id = generateIdFromUrl(url);
       setArticles((prev) => {
         const next = prev.filter((a) => a.id !== id);
         cacheArticles(next);
@@ -189,7 +189,7 @@ export function useArticles() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url, refs }),
     });
-    const id = decodeURIComponent(url.split("/").pop()?.replace(".md", "") ?? "");
+    const id = generateIdFromUrl(url);
     setArticles((prev) => {
       const next = prev.map((a) => (a.id === id ? { ...a, refs: refs.length > 0 ? refs : undefined } : a));
       cacheArticles(next);
@@ -203,7 +203,7 @@ export function useArticles() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url, categories }),
     });
-    const id = decodeURIComponent(url.split("/").pop()?.replace(".md", "") ?? "");
+    const id = generateIdFromUrl(url);
     setArticles((prev) => {
       const next = prev.map((a) => (a.id === id ? { ...a, categories: categories.length > 0 ? categories : undefined } : a));
       cacheArticles(next);
