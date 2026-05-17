@@ -222,6 +222,11 @@
   {
     "url": "https://github.com/yangwei2future/interview/blob/main/src/concurrent/locks/README.md",
     "createdAt": "2026-05-16T03:24:42.483Z",
-    "title": "synchronized 锁升级"
+    "title": "synchronized 锁升级",
+    "updatedAt": "2026-05-17T04:12:12.738Z",
+    "categories": [
+      "backend",
+      "tools"
+    ]
   }
 ]
