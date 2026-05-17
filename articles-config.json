@@ -233,7 +233,10 @@
     "url": "https://github.com/yangwei2future/interview/blob/main/docs/interview-qa-summary.md",
     "createdAt": "2026-05-17T13:41:34.617Z",
     "title": "面试题分析",
-    "updatedAt": "2026-05-17T13:41:41.733Z",
-    "hidden": true
+    "updatedAt": "2026-05-17T13:41:49.430Z",
+    "hidden": true,
+    "categories": [
+      "backend"
+    ]
   }
 ]
