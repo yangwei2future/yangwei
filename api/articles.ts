@@ -5,8 +5,18 @@ const OWNER = process.env.GITHUB_OWNER || "yangwei2future";
 const REPO = process.env.GITHUB_REPO || "yangwei";
 const FILE_PATH = "articles-config.json";
 
+function generateIdFromUrl(url: string): string {
+  const blobMatch = url.match(/github\.com\/[^/]+\/[^/]+\/blob\/[^/]+\/(.+)/);
+  if (blobMatch) return blobMatch[1].replace(/\.md$/i, "").replace(/\//g, "-");
+  const rawMatch = url.match(/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[^/]+\/(.+)/);
+  if (rawMatch) return rawMatch[1].replace(/\.md$/i, "").replace(/\//g, "-");
+  const filename = url.split("/").pop()?.replace(/\.md$/i, "") || "article";
+  return decodeURIComponent(filename);
+}
+
 interface ArticleEntry {
   url: string;
+  id?: string;
   title?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -70,7 +80,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!url) return res.status(400).json({ error: "Missing url" });
       const { entries, sha } = await getConfig();
       if (entries.some((e) => e.url === url)) return res.status(409).json({ error: "此链接已存在" });
-      const entry: ArticleEntry = { url, createdAt: new Date().toISOString() };
+      const entry: ArticleEntry = { url, id: generateIdFromUrl(url), createdAt: new Date().toISOString() };
       if (title?.trim()) entry.title = title.trim();
       await saveConfig([...entries, entry], sha);
       return res.status(200).json({ ok: true });

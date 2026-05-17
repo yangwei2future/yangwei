@@ -12,7 +12,7 @@ import "highlight.js/styles/github.css";
 import { ArrowLeft, X, Copy, Check, Lock, BookMarked } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { ComponentPropsWithoutRef, ReactElement } from "react";
-import { fetchArticlesFromGitHub, generateIdFromUrl } from "@/lib/markdown-loader";
+import { fetchArticlesFromGitHub, resolveArticleId } from "@/lib/markdown-loader";
 import type { Article as ArticleType } from "@/lib/types";
 
 function makeHeading(Tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
@@ -90,7 +90,7 @@ export default function Article() {
     if (loading || !id) return;
     if (articles.find((a) => a.id === id)) return;
     const link = allLinks.find(
-      (l) => l.hidden && generateIdFromUrl(l.url) === id
+      (l) => l.hidden && resolveArticleId(l) === id
     );
     if (!link) return;
     setHiddenLoading(true);
@@ -264,7 +264,7 @@ export default function Article() {
           const pub = articles.find((a) => a.id === refId);
           if (pub) return { id: pub.id, title: pub.title, excerpt: pub.excerpt, hidden: false };
           const link = allLinks.find(
-            (l) => generateIdFromUrl(l.url) === refId
+            (l) => resolveArticleId(l) === refId
           );
           if (link) return { id: refId, title: link.title ?? refId, excerpt: "", hidden: !!link.hidden };
           return null;

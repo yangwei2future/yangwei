@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchArticlesFromGitHub, generateIdFromUrl } from "./markdown-loader";
+import { fetchArticlesFromGitHub, resolveArticleId } from "./markdown-loader";
 import type { Article } from "./types";
 
 /**
@@ -47,11 +47,11 @@ export function useArticles() {
       // Check cache first, but filter out any hidden articles
       const cached = getCachedArticles();
       if (cached) {
-        const visibleIds = new Set(entries.map((e) => generateIdFromUrl(e.url)));
+        const visibleIds = new Set(entries.map((e) => resolveArticleId(e)));
         const filteredCache = cached
           .filter((a) => visibleIds.has(a.id))
           .map((article) => {
-            const entry = entries.find((e) => generateIdFromUrl(e.url) === article.id);
+            const entry = entries.find((e) => resolveArticleId(e) === article.id);
             return {
               ...article,
               createdAt: entry?.createdAt ?? article.createdAt,
@@ -73,11 +73,12 @@ export function useArticles() {
       }
 
       console.log("Fetching articles from GitHub");
-      const fetchedArticles = await fetchArticlesFromGitHub(entries);
+      const entriesWithIds = entries.map((e) => ({ ...e, id: resolveArticleId(e) }));
+      const fetchedArticles = await fetchArticlesFromGitHub(entriesWithIds);
 
       // Merge server-side timestamps into articles
       const articlesWithTs = fetchedArticles.map((article) => {
-        const entry = entries.find((e) => generateIdFromUrl(e.url) === article.id);
+        const entry = entriesWithIds.find((e) => resolveArticleId(e) === article.id);
         return {
           ...article,
           createdAt: entry?.createdAt || new Date().toISOString(),
@@ -122,12 +123,12 @@ export function useArticles() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url }),
     });
-    const entry: { url: string; title?: string; createdAt?: string; updatedAt?: string } =
-      await fetch("/api/articles").then((r) => r.json()).then((entries: any[]) =>
-        entries.find((e) => e.url === url)
-      );
+    const entry = await fetch("/api/articles").then((r) => r.json()).then((entries: any[]) =>
+      entries.find((e) => e.url === url)
+    );
     if (!entry) return;
-    const [fetched] = await fetchArticlesFromGitHub([entry]);
+    const effectiveId = resolveArticleId(entry);
+    const [fetched] = await fetchArticlesFromGitHub([{ ...entry, id: effectiveId }]);
     const updated = {
       ...fetched,
       createdAt: entry.createdAt || new Date().toISOString(),
@@ -149,9 +150,10 @@ export function useArticles() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url, title }),
     });
+    const targetId = resolveArticleId(allLinks.find((l) => l.url === url) ?? { url });
     setArticles((prev) => {
       const next = prev.map((a) =>
-        a.id === generateIdFromUrl(url)
+        a.id === targetId
           ? { ...a, title: title || a.title }
           : a
       );
@@ -171,7 +173,7 @@ export function useArticles() {
     });
     // Remove from public list if hidden, reload if un-hiding
     if (hidden) {
-      const id = generateIdFromUrl(url);
+      const id = resolveArticleId(allLinks.find((l) => l.url === url) ?? { url });
       setArticles((prev) => {
         const next = prev.filter((a) => a.id !== id);
         cacheArticles(next);
@@ -189,7 +191,7 @@ export function useArticles() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url, refs }),
     });
-    const id = generateIdFromUrl(url);
+    const id = resolveArticleId(allLinks.find((l) => l.url === url) ?? { url });
     setArticles((prev) => {
       const next = prev.map((a) => (a.id === id ? { ...a, refs: refs.length > 0 ? refs : undefined } : a));
       cacheArticles(next);
@@ -203,7 +205,7 @@ export function useArticles() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url, categories }),
     });
-    const id = generateIdFromUrl(url);
+    const id = resolveArticleId(allLinks.find((l) => l.url === url) ?? { url });
     setArticles((prev) => {
       const next = prev.map((a) => (a.id === id ? { ...a, categories: categories.length > 0 ? categories : undefined } : a));
       cacheArticles(next);
@@ -224,9 +226,10 @@ export function preloadArticles(): void {
 
   fetch("/api/articles")
     .then((r) => r.json())
-    .then((entries: { url: string; title?: string }[]) => {
+    .then((entries: { url: string; id?: string; title?: string }[]) => {
       if (entries.length === 0) return;
-      return fetchArticlesFromGitHub(entries).then((articles) => {
+      const entriesWithIds = entries.map((e) => ({ ...e, id: resolveArticleId(e) }));
+      return fetchArticlesFromGitHub(entriesWithIds).then((articles) => {
         cacheArticles(articles);
       });
     })

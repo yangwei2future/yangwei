@@ -155,6 +155,26 @@ function vitePluginArticlesApi(): Plugin {
       const proxyUrl = () =>
         env.HTTPS_PROXY || env.https_proxy || env.HTTP_PROXY || env.http_proxy;
 
+      interface ArticleEntry {
+        url: string;
+        id?: string;
+        title?: string;
+        createdAt?: string;
+        updatedAt?: string;
+        hidden?: boolean;
+        categories?: string[];
+        refs?: string[];
+      }
+
+      function generateIdFromUrl(url: string): string {
+        const blobMatch = url.match(/github\.com\/[^/]+\/[^/]+\/blob\/[^/]+\/(.+)/);
+        if (blobMatch) return blobMatch[1].replace(/\.md$/i, "").replace(/\//g, "-");
+        const rawMatch = url.match(/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[^/]+\/(.+)/);
+        if (rawMatch) return rawMatch[1].replace(/\.md$/i, "").replace(/\//g, "-");
+        const filename = url.split("/").pop()?.replace(/\.md$/i, "") || "article";
+        return decodeURIComponent(filename);
+      }
+
       const githubFetch = (url: string, init?: RequestInit) => {
         const dispatcher = proxyUrl() ? new ProxyAgent(proxyUrl()!) : undefined;
         return undiciFetch(url, {
@@ -168,19 +188,25 @@ function vitePluginArticlesApi(): Plugin {
         } as Parameters<typeof undiciFetch>[1]);
       };
 
-      const getConfig = async (): Promise<{ urls: string[]; sha: string }> => {
+      const getConfig = async (): Promise<{ entries: ArticleEntry[]; sha: string }> => {
         const r = await githubFetch(
           `https://api.github.com/repos/${owner()}/${repo()}/contents/${filePath}`
         );
-        if ((r as any).status === 404) return { urls: [], sha: "" };
+        if ((r as any).status === 404) return { entries: [], sha: "" };
         if (!(r as any).ok) throw new Error(`GitHub error: ${(r as any).status}`);
         const data = await (r as any).json();
         const content = Buffer.from(data.content, "base64").toString("utf-8");
-        return { urls: JSON.parse(content), sha: data.sha };
+        const parsed = JSON.parse(content);
+        const entries: ArticleEntry[] = Array.isArray(parsed)
+          ? parsed.map((item: string | ArticleEntry) =>
+              typeof item === "string" ? { url: item } : item
+            )
+          : [];
+        return { entries, sha: data.sha };
       };
 
-      const saveConfig = async (urls: string[], sha: string) => {
-        const content = Buffer.from(JSON.stringify(urls, null, 2)).toString("base64");
+      const saveConfig = async (entries: ArticleEntry[], sha: string) => {
+        const content = Buffer.from(JSON.stringify(entries, null, 2)).toString("base64");
         const body: Record<string, unknown> = {
           message: "Update article links",
           content,
@@ -200,8 +226,8 @@ function vitePluginArticlesApi(): Plugin {
 
         try {
           if (req.method === "GET") {
-            const { urls } = await getConfig();
-            return res.end(JSON.stringify(urls));
+            const { entries } = await getConfig();
+            return res.end(JSON.stringify(entries));
           }
 
           let body = "";
@@ -212,20 +238,45 @@ function vitePluginArticlesApi(): Plugin {
           const parsed = body ? JSON.parse(body) : {};
 
           if (req.method === "POST") {
-            const { url } = parsed;
-            const { urls, sha } = await getConfig();
-            if (urls.includes(url)) {
+            const { url, title } = parsed;
+            const { entries, sha } = await getConfig();
+            if (entries.some((e) => e.url === url)) {
               res.writeHead(409);
               return res.end(JSON.stringify({ error: "此链接已存在" }));
             }
-            await saveConfig([...urls, url], sha);
+            const entry: ArticleEntry = { url, id: generateIdFromUrl(url), createdAt: new Date().toISOString() };
+            if (title?.trim()) entry.title = title.trim();
+            await saveConfig([...entries, entry], sha);
+            return res.end(JSON.stringify({ ok: true }));
+          }
+
+          if (req.method === "PATCH") {
+            const { url, title, hidden, categories, refs } = parsed || {};
+            const { entries, sha } = await getConfig();
+            const updatedAt = new Date().toISOString();
+            if (url) {
+              await saveConfig(
+                entries.map((e) => {
+                  if (e.url !== url) return e;
+                  const updated: ArticleEntry = { ...e, updatedAt };
+                  if (title !== undefined) updated.title = title.trim() || undefined;
+                  if (hidden !== undefined) updated.hidden = hidden;
+                  if (categories !== undefined) updated.categories = Array.isArray(categories) && categories.length > 0 ? categories : undefined;
+                  if (refs !== undefined) updated.refs = Array.isArray(refs) && refs.length > 0 ? refs : undefined;
+                  return updated;
+                }),
+                sha
+              );
+            } else {
+              await saveConfig(entries.map((e) => ({ ...e, updatedAt })), sha);
+            }
             return res.end(JSON.stringify({ ok: true }));
           }
 
           if (req.method === "DELETE") {
             const { url } = parsed;
-            const { urls, sha } = await getConfig();
-            await saveConfig(urls.filter((u: string) => u !== url), sha);
+            const { entries, sha } = await getConfig();
+            await saveConfig(entries.filter((e) => e.url !== url), sha);
             return res.end(JSON.stringify({ ok: true }));
           }
         } catch (err) {

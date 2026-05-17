@@ -72,7 +72,7 @@ function parseFrontmatter(content: string): { data: Record<string, any>; content
 /**
  * Fetch Markdown content from GitHub raw URL
  */
-export async function fetchMarkdownFromGitHub(url: string, customTitle?: string, fallbackDate?: string): Promise<Article> {
+export async function fetchMarkdownFromGitHub(url: string, customTitle?: string, fallbackDate?: string, customId?: string): Promise<Article> {
   try {
     // Convert GitHub URL to API URL
     const apiUrl = convertToApiUrl(url);
@@ -103,7 +103,7 @@ export async function fetchMarkdownFromGitHub(url: string, customTitle?: string,
       excerpt: data.excerpt || generateExcerpt(content),
     };
 
-    const id = generateIdFromUrl(url);
+    const id = customId || generateIdFromUrl(url);
     const rawBase = apiUrl.substring(0, apiUrl.lastIndexOf("/") + 1);
     const finalContent = rewriteImageUrls(content.trim(), rawBase);
 
@@ -189,33 +189,39 @@ function generateExcerpt(content: string): string {
 }
 
 /**
- * Generate unique ID from URL
- * Uses the full path after the branch (for GitHub URLs) to avoid collisions
+ * Generate unique ID from URL (filename only, legacy)
+ * Used for backward compatibility with articles created before stored IDs
+ */
+function generateIdFromUrlLegacy(url: string): string {
+  const filename = url.split("/").pop()?.replace(/\.md$/i, "") || "article";
+  return decodeURIComponent(filename);
+}
+
+/**
+ * Generate unique ID from URL (path-based, used for new articles)
+ * Uses the full path after the branch to avoid filename collisions
  * e.g. .../blob/main/src/concurrent/locks/README.md → src-concurrent-locks-README
  */
 export function generateIdFromUrl(url: string): string {
-  // GitHub blob URL: https://github.com/{user}/{repo}/blob/{branch}/{path}
   const blobMatch = url.match(/github\.com\/[^/]+\/[^/]+\/blob\/[^/]+\/(.+)/);
-  if (blobMatch) {
-    return blobMatch[1].replace(/\.md$/i, "").replace(/\//g, "-");
-  }
-  // Raw GitHub URL: https://raw.githubusercontent.com/{user}/{repo}/{branch}/{path}
+  if (blobMatch) return blobMatch[1].replace(/\.md$/i, "").replace(/\//g, "-");
   const rawMatch = url.match(/raw\.githubusercontent\.com\/[^/]+\/[^/]+\/[^/]+\/(.+)/);
-  if (rawMatch) {
-    return rawMatch[1].replace(/\.md$/i, "").replace(/\//g, "-");
-  }
-  // Fallback: filename only
-  const filename = url.split("/").pop()?.replace(/\.md$/i, "") || "article";
-  return decodeURIComponent(filename);
+  if (rawMatch) return rawMatch[1].replace(/\.md$/i, "").replace(/\//g, "-");
+  return generateIdFromUrlLegacy(url);
+}
+
+/** Resolve effective article id: stored id first, then legacy fallback */
+export function resolveArticleId(entry: { url: string; id?: string }): string {
+  return entry.id ?? generateIdFromUrlLegacy(entry.url);
 }
 
 /**
  * Batch fetch multiple articles from GitHub URLs
  */
 export async function fetchArticlesFromGitHub(
-  entries: { url: string; title?: string; createdAt?: string }[]
+  entries: { url: string; id?: string; title?: string; createdAt?: string }[]
 ): Promise<Article[]> {
   return Promise.all(
-    entries.map((e) => fetchMarkdownFromGitHub(e.url, e.title, e.createdAt))
+    entries.map((e) => fetchMarkdownFromGitHub(e.url, e.title, e.createdAt, e.id))
   );
 }
