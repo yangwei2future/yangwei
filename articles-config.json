@@ -238,5 +238,11 @@
     "categories": [
       "backend"
     ]
+  },
+  {
+    "url": "https://github.com/yangwei2future/interview/blob/main/docs/%E6%85%A2SQL%E6%8E%92%E6%9F%A5%E5%AE%9E%E6%88%98_davinci_statistic_visitor_operation.md",
+    "id": "docs-%E6%85%A2SQL%E6%8E%92%E6%9F%A5%E5%AE%9E%E6%88%98_davinci_statistic_visitor_operation",
+    "createdAt": "2026-05-19T09:20:21.064Z",
+    "title": "线上慢 SQL 排查实战"
   }
 ]
