@@ -481,7 +481,7 @@ export default function Admin() {
                           创建于 {new Date(link.createdAt).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
                         </p>
                       )}
-                      {link.updatedAt && (
+                      {link.updatedAt && link.updatedAt !== link.createdAt && (
                         <p className="text-xs text-muted-foreground/70">
                           更新于 {new Date(link.updatedAt).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}
                         </p>

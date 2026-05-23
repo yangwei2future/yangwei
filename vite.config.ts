@@ -268,7 +268,8 @@ function vitePluginArticlesApi(): Plugin {
                 sha
               );
             } else {
-              await saveConfig(entries.map((e) => ({ ...e, updatedAt })), sha);
+              // Sync all: content refresh only, no data mutation
+              return res.end(JSON.stringify({ ok: true }));
             }
             return res.end(JSON.stringify({ ok: true }));
           }

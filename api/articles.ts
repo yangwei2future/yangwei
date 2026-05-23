@@ -105,8 +105,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           sha
         );
       } else {
-        // Sync all: update every entry's updatedAt
-        await saveConfig(entries.map((e) => ({ ...e, updatedAt })), sha);
+        // Sync all: content refresh only, don't mutate entry data
+        return res.status(200).json({ ok: true });
       }
       return res.status(200).json({ ok: true });
     }
