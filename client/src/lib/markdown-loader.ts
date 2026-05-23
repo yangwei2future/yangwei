@@ -115,7 +115,7 @@ export async function fetchMarkdownFromGitHub(url: string, customTitle?: string,
       date: metadata.date,
       tags: metadata.tags,
       author: metadata.author,
-      createdAt: fallbackDate || metadata.date,
+      createdAt: metadata.date,
     };
   } catch (error) {
     console.error("Error fetching markdown:", error);

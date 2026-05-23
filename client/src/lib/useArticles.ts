@@ -54,7 +54,7 @@ export function useArticles() {
             const entry = entries.find((e) => resolveArticleId(e) === article.id);
             return {
               ...article,
-              createdAt: entry?.createdAt ?? article.createdAt,
+              createdAt: article.createdAt,
               updatedAt: entry?.updatedAt ?? article.updatedAt,
               categories: entry?.categories ?? article.categories,
               refs: entry?.refs,
@@ -81,7 +81,7 @@ export function useArticles() {
         const entry = entriesWithIds.find((e) => resolveArticleId(e) === article.id);
         return {
           ...article,
-          createdAt: entry?.createdAt ?? article.createdAt,
+          createdAt: article.createdAt,
           updatedAt: entry?.updatedAt,
           categories: entry?.categories,
           refs: entry?.refs,
@@ -131,7 +131,7 @@ export function useArticles() {
     const [fetched] = await fetchArticlesFromGitHub([{ ...entry, id: effectiveId }]);
     const updated = {
       ...fetched,
-      createdAt: entry.createdAt ?? fetched.createdAt,
+      createdAt: fetched.createdAt,
       updatedAt: entry.updatedAt,
     };
     setArticles((prev) => {
