@@ -57,6 +57,27 @@ export default function Admin() {
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 8;
 
+  async function handleFixTimestamps() {
+    setSyncing(true);
+    setSuccess("");
+    setError("");
+    try {
+      await fetch("/api/articles", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fixTimestamps: true }),
+      });
+      setSuccess("已修复所有文章时间");
+      // Reload links to reflect changes
+      const updated = await getArticleLinks();
+      setLinks(updated);
+    } catch {
+      setError("修复失败");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   async function handleSync() {
     setSyncing(true);
     setSuccess("");
@@ -211,6 +232,9 @@ export default function Admin() {
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">文章链接管理</h1>
           <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleFixTimestamps} disabled={syncing} className="text-xs px-3">
+              修复时间
+            </Button>
             <Button variant="outline" onClick={handleSync} disabled={syncing}>
               <RefreshCw className={`h-4 w-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
               同步内容

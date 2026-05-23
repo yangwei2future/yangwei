@@ -87,9 +87,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === "PATCH") {
-      const { url, title, hidden, categories, refs } = req.body || {};
+      const { url, title, hidden, categories, refs, fixTimestamps } = req.body || {};
       const { entries, sha } = await getConfig();
       const updatedAt = new Date().toISOString();
+
+      // One-time fix: reset all updatedAt to match createdAt
+      if (fixTimestamps) {
+        await saveConfig(
+          entries.map((e) => ({ ...e, updatedAt: e.createdAt ?? e.updatedAt })),
+          sha
+        );
+        return res.status(200).json({ ok: true, fixed: true });
+      }
+
       if (url) {
         // Update single entry: updatedAt + optional title/hidden/category
         await saveConfig(
