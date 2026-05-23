@@ -95,8 +95,8 @@ export async function fetchMarkdownFromGitHub(url: string, customTitle?: string,
     // Extract metadata
     const metadata: GitHubMarkdown = {
       title: customTitle || data.title || extractTitleFromContent(content) || "Untitled",
-      date: (data.date && (data.date.includes("T") || data.date.includes(" ")))
-        ? data.date
+      date: (data.date && /\d{4}-\d{2}-\d{2}/.test(data.date))
+        ? data.date + (data.date.includes("T") ? "" : "T00:00:00+08:00")
         : (fallbackDate || toBeijingISOString()),
       tags: Array.isArray(data.tags) ? data.tags : [],
       author: data.author || "杨卫",
@@ -115,7 +115,7 @@ export async function fetchMarkdownFromGitHub(url: string, customTitle?: string,
       date: metadata.date,
       tags: metadata.tags,
       author: metadata.author,
-      createdAt: new Date().toISOString(),
+      createdAt: fallbackDate || metadata.date,
     };
   } catch (error) {
     console.error("Error fetching markdown:", error);
