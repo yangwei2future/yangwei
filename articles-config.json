@@ -254,6 +254,11 @@
     "url": "https://github.com/yangwei2future/interview/blob/main/src/interview-records/aksk-signature.md",
     "id": "src-interview-records-aksk-signature",
     "createdAt": "2026-05-25T09:52:35.712Z",
-    "title": "API 网关 AK/SK 签名认证原理"
+    "title": "API 网关 AK/SK 签名认证原理",
+    "updatedAt": "2026-05-25T09:52:47.435Z",
+    "categories": [
+      "backend",
+      "architecture"
+    ]
   }
 ]
