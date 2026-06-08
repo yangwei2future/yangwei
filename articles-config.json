@@ -260,5 +260,11 @@
       "backend",
       "architecture"
     ]
+  },
+  {
+    "url": "https://github.com/yangwei2future/interview/blob/main/src/embodied-ai/miniconda-install-guide.md",
+    "id": "src-embodied-ai-miniconda-install-guide",
+    "createdAt": "2026-06-08T12:53:51.069Z",
+    "title": "macOS Miniconda 安装与配置完整指南"
   }
 ]
