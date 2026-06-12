@@ -6,12 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Lock, LogOut, Loader2, RefreshCw, Pencil, Check, X, EyeOff, Eye, Tag, FolderOpen, BookMarked, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Github, Lock, LogOut, Loader2, RefreshCw, Pencil, Check, X, EyeOff, Eye, Tag, FolderOpen, BookMarked, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
-  verifyPassword,
-  isAuthenticated,
-  setAuthenticated,
+  getAuthSession,
+  getGithubLoginUrl,
   logout,
   getArticleLinks,
   addArticleLink,
@@ -25,8 +24,7 @@ import { COLOR_OPTIONS, getBadgeClass } from "@/lib/categories";
 
 export default function Admin() {
   const [, setLocation] = useLocation();
-  const [password, setPassword] = useState("");
-  const [authenticated, setAuthState] = useState(isAuthenticated());
+  const [authenticated, setAuthState] = useState<boolean | null>(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [newUrl, setNewUrl] = useState("");
@@ -56,6 +54,10 @@ export default function Admin() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 8;
+
+  useEffect(() => {
+    getAuthSession().then((session) => setAuthState(session.authenticated));
+  }, []);
 
   async function handleFixTimestamps() {
     setSyncing(true);
@@ -101,20 +103,8 @@ export default function Admin() {
     }
   }, [authenticated]);
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    if (verifyPassword(password)) {
-      setAuthenticated(true);
-      setAuthState(true);
-      setPassword("");
-    } else {
-      setError("密码错误，请重试");
-    }
-  };
-
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setAuthState(false);
     setLocation("/");
   };
@@ -186,7 +176,26 @@ export default function Admin() {
     return url.includes("github.com") && url.endsWith(".md");
   }
 
+  if (authenticated === null) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container flex justify-center py-24">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    );
+  }
+
   if (!authenticated) {
+    const authError = new URLSearchParams(window.location.search).get("auth_error");
+    const authErrorMessage: Record<string, string> = {
+      denied: "你取消了 GitHub 授权，请重试。",
+      invalid_state: "登录请求已失效，请重新发起登录。",
+      not_authorized: "该 GitHub 账号没有博客管理权限。",
+      callback_failed: "GitHub 登录失败，请稍后重试。",
+      configuration: "GitHub 登录尚未完成服务端配置。",
+    };
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
@@ -199,25 +208,22 @@ export default function Admin() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                  <Label htmlFor="password">密码</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="请输入密码"
-                    className="mt-2"
-                  />
-                </div>
-                {error && (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  使用已授权的 GitHub 账号登录管理后台。
+                </p>
+                {authError && (
                   <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>{authErrorMessage[authError] || "登录失败，请重新尝试。"}</AlertDescription>
                   </Alert>
                 )}
-                <Button type="submit" className="w-full">登录</Button>
-              </form>
+                <Button asChild className="w-full">
+                  <a href={getGithubLoginUrl()}>
+                    <Github className="h-4 w-4 mr-2" />
+                    使用 GitHub 登录
+                  </a>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

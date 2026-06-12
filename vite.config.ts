@@ -8,6 +8,15 @@ import path from "node:path";
 import { ProxyAgent, fetch as undiciFetch } from "undici";
 import { defineConfig, loadEnv, type Plugin, type ViteDevServer } from "vite";
 import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
+import { isAuthenticatedRequest } from "./server/auth/http";
+import {
+  createNodeAuthResponse,
+  handleGithubCallback,
+  handleGithubLogin,
+  handleLogout,
+  handleSession,
+  toAuthRequest,
+} from "./server/auth/routes";
 
 // =============================================================================
 // Manus Debug Collector - Vite Plugin
@@ -139,6 +148,30 @@ function vitePluginGitHubProxy(): Plugin {
   };
 }
 
+function vitePluginAuthApi(): Plugin {
+  return {
+    name: "auth-api",
+    config(_, { mode }) {
+      Object.assign(process.env, loadEnv(mode, process.cwd(), ""));
+    },
+    configureServer(server: ViteDevServer) {
+      const routes = new Map([
+        ["/api/auth/github", handleGithubLogin],
+        ["/api/auth/github/callback", handleGithubCallback],
+        ["/api/auth/session", handleSession],
+        ["/api/auth/logout", handleLogout],
+      ]);
+
+      server.middlewares.use(async (req, res, next) => {
+        const pathname = new URL(req.url || "/", "http://localhost").pathname;
+        const handler = routes.get(pathname);
+        if (!handler) return next();
+        await handler(toAuthRequest(req), createNodeAuthResponse(res));
+      });
+    },
+  };
+}
+
 function vitePluginArticlesApi(): Plugin {
   let env: Record<string, string> = {};
 
@@ -228,6 +261,11 @@ function vitePluginArticlesApi(): Plugin {
           if (req.method === "GET") {
             const { entries } = await getConfig();
             return res.end(JSON.stringify(entries));
+          }
+
+          if (!isAuthenticatedRequest(req)) {
+            res.writeHead(401);
+            return res.end(JSON.stringify({ error: "Unauthorized" }));
           }
 
           let body = "";
@@ -338,6 +376,10 @@ function vitePluginCategoriesApi(): Plugin {
           if (req.method === "GET") {
             const { categories } = await getConfig();
             return res.end(JSON.stringify(categories));
+          }
+          if (!isAuthenticatedRequest(req)) {
+            res.writeHead(401);
+            return res.end(JSON.stringify({ error: "Unauthorized" }));
           }
           let body = "";
           await new Promise<void>((resolve) => { req.on("data", (c) => (body += c)); req.on("end", resolve); });
@@ -539,6 +581,7 @@ const plugins = [
   tailwindcss(),
   jsxLocPlugin(),
   vitePluginManusRuntime(),
+  vitePluginAuthApi(),
   vitePluginGitHubProxy(),
   vitePluginArticlesApi(),
   vitePluginCategoriesApi(),

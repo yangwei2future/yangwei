@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import type React from "react";
 import Navigation from "@/components/Navigation";
 import { Mail, Github, ExternalLink, Pencil, Check, X, Plus, Trash2, Phone, MessageCircle, Copy } from "lucide-react";
-import { isAuthenticated } from "@/lib/article-links";
+import { getAuthSession } from "@/lib/article-links";
 
 interface AboutConfig {
   subtitle: string;
@@ -199,7 +199,9 @@ export default function About() {
 
   // Re-check auth whenever the page gains focus (e.g. after logging in at /admin)
   useEffect(() => {
-    const check = () => setIsAdmin(isAuthenticated());
+    const check = () => {
+      getAuthSession().then((session) => setIsAdmin(session.authenticated));
+    };
     check();
     window.addEventListener("focus", check);
     return () => window.removeEventListener("focus", check);
@@ -229,11 +231,12 @@ export default function About() {
   async function persist(next: AboutConfig) {
     setSaving(true);
     try {
-      await fetch("/api/about", {
+      const response = await fetch("/api/about", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(next),
       });
+      if (!response.ok) throw new Error("保存失败");
       setData(next);
       try { localStorage.setItem(CACHE_KEY, JSON.stringify({ d: next, ts: Date.now() })); } catch {}
       setEditing(null);

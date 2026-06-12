@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Send, Trash2, MessageSquare } from "lucide-react";
-import { isAuthenticated } from "@/lib/article-links";
+import { getAuthSession } from "@/lib/article-links";
 
 interface Comment {
   id: string;
@@ -21,7 +21,7 @@ export default function Comments({ articleId }: Props) {
   const [nickname, setNickname] = useState("");
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
-  const isAdmin = isAuthenticated();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -30,6 +30,10 @@ export default function Comments({ articleId }: Props) {
       .then((data) => Array.isArray(data) && setComments(data))
       .finally(() => setLoading(false));
   }, [articleId]);
+
+  useEffect(() => {
+    getAuthSession().then((session) => setIsAdmin(session.authenticated));
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -5,7 +5,19 @@
  */
 
 const CACHE_KEY = "blog_articles_cache";
-const AUTH_PASSWORD = "123456";
+const AUTH_CACHE_KEY = "blog_authenticated";
+
+export interface AuthUser {
+  id: string;
+  login: string;
+  name: string;
+  avatarUrl: string;
+}
+
+export interface AuthSession {
+  authenticated: boolean;
+  user: AuthUser | null;
+}
 
 function clearArticleCache() {
   try { localStorage.removeItem(CACHE_KEY); } catch {}
@@ -60,35 +72,47 @@ export async function removeArticleLink(url: string): Promise<void> {
 }
 
 /**
- * Verify password for admin access
- */
-export function verifyPassword(password: string): boolean {
-  return password === AUTH_PASSWORD;
-}
-
-/**
- * Check if user is authenticated (session)
+ * This is only a synchronous UI hint. Server-side authorization always
+ * validates the HttpOnly session cookie.
  */
 export function isAuthenticated(): boolean {
   try {
-    return sessionStorage.getItem("blog_authenticated") === "true";
+    return sessionStorage.getItem(AUTH_CACHE_KEY) === "true";
   } catch {
     return false;
   }
 }
 
-/**
- * Set authentication status (session)
- */
-export function setAuthenticated(status: boolean): void {
+function setAuthenticated(status: boolean): void {
   try {
-    sessionStorage.setItem("blog_authenticated", status.toString());
+    sessionStorage.setItem(AUTH_CACHE_KEY, status.toString());
   } catch {}
 }
 
-/**
- * Logout
- */
-export function logout(): void {
+export async function getAuthSession(): Promise<AuthSession> {
+  try {
+    const response = await fetch("/api/auth/session", {
+      credentials: "same-origin",
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error("Unable to load session");
+    const session = (await response.json()) as AuthSession;
+    setAuthenticated(session.authenticated);
+    return session;
+  } catch {
+    setAuthenticated(false);
+    return { authenticated: false, user: null };
+  }
+}
+
+export function getGithubLoginUrl(): string {
+  return "/api/auth/github";
+}
+
+export async function logout(): Promise<void> {
+  await fetch("/api/auth/logout", {
+    method: "POST",
+    credentials: "same-origin",
+  }).catch(() => undefined);
   setAuthenticated(false);
 }

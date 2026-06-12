@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { isAuthenticatedRequest } from "../server/auth/http";
 
 const TOKEN = process.env.GITHUB_TOKEN || process.env.github_token || "";
 const OWNER = process.env.GITHUB_OWNER || "yangwei2future";
@@ -74,6 +75,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === "PUT") {
+      if (!isAuthenticatedRequest(req)) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       const { sha } = await getConfig();
       await saveConfig(req.body as AboutConfig, sha);
       return res.status(200).json({ ok: true });
