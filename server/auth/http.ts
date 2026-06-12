@@ -5,7 +5,7 @@ import {
   parseCookies,
   readSessionToken,
   type SessionUser,
-} from "./github-oauth";
+} from "./github-oauth.js";
 
 export function getSessionUser(
   req: Pick<IncomingMessage, "headers">

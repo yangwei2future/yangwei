@@ -19,7 +19,7 @@ import {
   safeEqual,
   serializeCookie,
   toSessionUser,
-} from "./github-oauth";
+} from "./github-oauth.js";
 
 type HeaderValue = string | string[] | undefined;
 

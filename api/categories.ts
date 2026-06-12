@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { isAuthenticatedRequest } from "../server/auth/http";
+import { isAuthenticatedRequest } from "../server/auth/http.js";
 
 const TOKEN = process.env.GITHUB_TOKEN || process.env.github_token || "";
 const OWNER = process.env.GITHUB_OWNER || "yangwei2future";

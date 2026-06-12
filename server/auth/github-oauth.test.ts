@@ -12,8 +12,8 @@ import {
   readSessionToken,
   type AuthConfig,
   type SessionUser,
-} from "./github-oauth";
-import { handleGithubCallback, type AuthResponse } from "./routes";
+} from "./github-oauth.js";
+import { handleGithubCallback, type AuthResponse } from "./routes.js";
 
 const secret = "test-secret-that-is-at-least-32-characters-long";
 const config: AuthConfig = {
