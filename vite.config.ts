@@ -221,21 +221,27 @@ function vitePluginArticlesApi(): Plugin {
         } as Parameters<typeof undiciFetch>[1]);
       };
 
-      const getConfig = async (): Promise<{ entries: ArticleEntry[]; sha: string }> => {
-        const r = await githubFetch(
-          `https://api.github.com/repos/${owner()}/${repo()}/contents/${filePath}`
-        );
-        if ((r as any).status === 404) return { entries: [], sha: "" };
-        if (!(r as any).ok) throw new Error(`GitHub error: ${(r as any).status}`);
-        const data = await (r as any).json();
-        const content = Buffer.from(data.content, "base64").toString("utf-8");
-        const parsed = JSON.parse(content);
-        const entries: ArticleEntry[] = Array.isArray(parsed)
-          ? parsed.map((item: string | ArticleEntry) =>
-              typeof item === "string" ? { url: item } : item
-            )
-          : [];
-        return { entries, sha: data.sha };
+      const getConfig = async (allowLocalFallback = false): Promise<{ entries: ArticleEntry[]; sha: string }> => {
+        try {
+          const r = await githubFetch(
+            `https://api.github.com/repos/${owner()}/${repo()}/contents/${filePath}`
+          );
+          if ((r as any).status === 404) return { entries: [], sha: "" };
+          if (!(r as any).ok) throw new Error(`GitHub error: ${(r as any).status}`);
+          const data = await (r as any).json();
+          const content = Buffer.from(data.content, "base64").toString("utf-8");
+          const parsed = JSON.parse(content);
+          const entries: ArticleEntry[] = Array.isArray(parsed)
+            ? parsed.map((item: string | ArticleEntry) =>
+                typeof item === "string" ? { url: item } : item
+              )
+            : [];
+          return { entries, sha: data.sha };
+        } catch (error) {
+          if (!allowLocalFallback) throw error;
+          const localContent = fs.readFileSync(path.join(PROJECT_ROOT, filePath), "utf-8");
+          return { entries: JSON.parse(localContent), sha: "" };
+        }
       };
 
       const saveConfig = async (entries: ArticleEntry[], sha: string) => {
@@ -259,7 +265,9 @@ function vitePluginArticlesApi(): Plugin {
 
         try {
           if (req.method === "GET") {
-            const { entries } = await getConfig();
+            // Keep the public site usable during local development when GitHub is
+            // temporarily unavailable. Mutations still require the remote config.
+            const { entries } = await getConfig(true);
             return res.end(JSON.stringify(entries));
           }
 

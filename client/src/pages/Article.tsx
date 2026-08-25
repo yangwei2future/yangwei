@@ -162,20 +162,21 @@ export default function Article() {
     .slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-background pb-10">
+    <div className="site-page">
       <Navigation />
       <TableOfContents content={article.content} />
 
       {/* Article Header */}
-      <section className="py-12 border-b border-border">
-        <div className="container max-w-4xl">
+      <section className="article-hero">
+        <div className="container article-shell">
           <Link href="/articles" className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors mb-6">
             <ArrowLeft size={16} />
             返回文章列表
           </Link>
 
           <article>
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground flex items-center gap-3 flex-wrap">
+            <p className="page-kicker">ENGINEERING NOTE</p>
+            <h1 className="article-title">
               {article.title}
               {article.hidden && (
                 <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-muted text-muted-foreground border border-border align-middle shrink-0">
@@ -185,7 +186,7 @@ export default function Article() {
               )}
             </h1>
 
-            <div className="mt-6 flex items-center justify-between text-sm text-muted-foreground">
+            <div className="article-byline">
               <time>
                 {"创建于 "}
                 {new Date(article.createdAt).toLocaleString("zh-CN", {
@@ -228,9 +229,9 @@ export default function Article() {
       </section>
 
       {/* Article Content */}
-      <section className="py-12">
-        <div className="container max-w-4xl">
-          <article className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-h3:text-xl prose-p:leading-relaxed prose-a:text-primary prose-code:text-primary prose-pre:bg-accent">
+      <section className="article-body-section">
+        <div className="container article-shell">
+          <article className="prose article-prose max-w-none">
             <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeHighlight]} components={markdownComponents as any}>
               {article.content}
             </ReactMarkdown>

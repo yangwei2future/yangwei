@@ -1,204 +1,124 @@
+import { useEffect, useMemo } from "react";
+import { ArrowRight, Braces, Database, Github, Sparkles } from "lucide-react";
 import { Link } from "wouter";
-import Navigation from "@/components/Navigation";
-import { useArticles, preloadArticles } from "@/lib/useArticles";
-import { useCategories } from "@/contexts/CategoriesContext";
-import { getBadgeClass } from "@/lib/categories";
-import { Mail, Github, MessageCircle, ArrowRight, Loader2, Link2 } from "lucide-react";
 import Footer from "@/components/Footer";
-import { useState, useEffect, useCallback } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Navigation from "@/components/Navigation";
+import { useCategories } from "@/contexts/CategoriesContext";
+import { preloadArticles, useArticles } from "@/lib/useArticles";
+import type { Article } from "@/lib/types";
 
-function ArticleRow({ id, title, excerpt, date, createdAt, categories, refsCount, commentCount }: {
-  id: string; title: string; excerpt: string; date: string;
-  createdAt?: string; categories?: string[];
-  refsCount: number;
-  commentCount: number;
-}) {
+function formatDate(value: string) {
+  return new Date(value).toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}
+
+function FeaturedArticle({ article, index }: { article: Article; index: number }) {
   const { getCategoryById } = useCategories();
-  const d = new Date(createdAt ?? date);
-  const cats = (categories ?? []).map(getCategoryById).filter(Boolean) as NonNullable<ReturnType<typeof getCategoryById>>[];
+  const category = article.categories?.map(getCategoryById).find(Boolean);
 
   return (
-    <Link href={`/article/${id}`} className="group block py-2 border-b border-border/50 last:border-0 hover:bg-accent/20 -mx-3 px-3 rounded-lg transition-colors duration-150">
-      <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors leading-snug truncate">
-          {title}
-        </h3>
-        <time className="shrink-0 text-xs text-muted-foreground/50 tabular-nums">
-          {d.toLocaleDateString("zh-CN", { month: "2-digit", day: "2-digit" })}
-        </time>
-      </div>
-      <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-        {cats.map((cat) => (
-          <span key={cat.id} className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded-full ${getBadgeClass(cat.color)}`}>
-            {cat.icon} {cat.label}
-          </span>
-        ))}
-        {refsCount > 0 && (
-          <span title="引用文章数" className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground/60 cursor-default">
-            <Link2 size={10} />
-            {refsCount}
-          </span>
-        )}
-        <span title="评论数" className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground/60 cursor-default">
-          <MessageCircle size={10} />
-          {commentCount}
-        </span>
-      </div>
-      {excerpt && (
-        <p className="mt-0.5 text-xs text-muted-foreground/60 line-clamp-1">{excerpt}</p>
-      )}
+    <Link href={`/article/${article.id}`} className="featured-card">
+      <article>
+        <div className="featured-index">0{index + 1}</div>
+        <div className="featured-content">
+          <div className="eyebrow-row">
+            <span>{category?.label ?? "技术笔记"}</span>
+            <time>{formatDate(article.createdAt ?? article.date)}</time>
+          </div>
+          <h2>{article.title}</h2>
+          <p>{article.excerpt || "从问题出发，记录方案、权衡与实践过程。"}</p>
+          <span className="read-more">阅读文章 <ArrowRight size={15} /></span>
+        </div>
+      </article>
     </Link>
   );
 }
 
 export default function Home() {
   const { articles, loading } = useArticles();
-  const recentArticles = articles.slice(0, 10);
-  const [wechatOpen, setWechatOpen] = useState(false);
-  const [emailOpen, setEmailOpen] = useState(false);
-  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
-
-  const fetchCommentCounts = useCallback(async () => {
-    try {
-      const counts = await fetch("/api/comments-count").then((r) => r.json());
-      setCommentCounts(counts);
-    } catch {}
-  }, []);
+  const { categories } = useCategories();
+  const featured = articles.slice(0, 2);
+  const recent = articles.slice(2, 8);
+  const visibleCategoryCount = useMemo(
+    () => categories.filter((category) => articles.some((article) => article.categories?.includes(category.id))).length,
+    [articles, categories],
+  );
 
   useEffect(() => { preloadArticles(); }, []);
-  useEffect(() => { fetchCommentCounts(); }, [fetchCommentCounts]);
 
   return (
-    <div className="min-h-screen bg-background pb-10">
+    <div className="site-page">
       <Navigation />
-
-      <div className="container max-w-5xl py-5 md:py-6">
-        <div className="grid grid-cols-1 md:grid-cols-[260px_1fr] gap-10 md:gap-16">
-
-          {/* ── Left: Profile ── */}
-          <aside className="space-y-4">
-            {/* Avatar + name */}
-            <div className="flex items-center gap-4 md:flex-col md:items-start md:gap-3">
-              <img
-                src="/avatar.jpg"
-                alt="avatar"
-                className="w-14 h-14 md:w-20 md:h-20 rounded-full object-cover ring-2 ring-border"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-              />
-              <div>
-                <h1 className="text-xl font-bold text-foreground">个人博客</h1>
-                <p className="text-sm text-muted-foreground mt-0.5">全栈工程师</p>
+      <main>
+        <section className="hero-section">
+          <div className="container hero-grid">
+            <div className="hero-copy">
+              <p className="hero-kicker"><span /> 大数据开发 · AI 应用实践</p>
+              <h1>把复杂系统，<br />写成<span>清晰答案。</span></h1>
+              <p className="hero-description">
+                你好，我是杨卫。这里记录后端工程、大数据平台与 AI 落地过程中的设计选择、踩坑经验和可复用方案。
+              </p>
+              <div className="hero-actions">
+                <Link href="/articles" className="primary-action">开始阅读 <ArrowRight size={16} /></Link>
+                <a href="https://github.com/yangwei2future" target="_blank" rel="noreferrer" className="secondary-action"><Github size={16} /> GitHub</a>
               </div>
             </div>
 
-            {/* Intro */}
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Java Web 开发，因为 AI 变成了全栈。
-              <br />记录技术成长和思考的地方。
-            </p>
-
-            {/* Social links */}
-            <div className="flex flex-col gap-1">
-              <button
-                onClick={() => setEmailOpen(true)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors text-left"
-              >
-                <Mail size={15} className="shrink-0" />
-                邮箱联系
-              </button>
-              <a
-                href="https://github.com/yangwei2future"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-              >
-                <Github size={15} className="shrink-0" />
-                GitHub
-              </a>
-              <button
-                onClick={() => setWechatOpen(true)}
-                className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors text-left"
-              >
-                <MessageCircle size={15} className="shrink-0" />
-                微信
-              </button>
-            </div>
-
-            {/* Nav links */}
-            <div className="pt-2 border-t border-border space-y-1">
-              <Link href="/articles" className="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-                所有文章 <ArrowRight size={13} />
-              </Link>
-              <Link href="/about" className="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-                关于我 <ArrowRight size={13} />
-              </Link>
-            </div>
-          </aside>
-
-          {/* ── Right: Recent Articles ── */}
-          <main>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-foreground">最新文章</h2>
-              <Link href="/articles" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-                查看全部 <ArrowRight size={11} />
-              </Link>
-            </div>
-
-            {loading ? (
-              <div className="flex items-center gap-2 py-8 text-muted-foreground text-sm">
-                <Loader2 size={15} className="animate-spin" />加载中…
+            <aside className="hero-panel" aria-label="博客概览">
+              <div className="hero-panel-top">
+                <span className="status-dot" /> NOW EXPLORING
               </div>
-            ) : recentArticles.length > 0 ? (
-              <div>
-                {recentArticles.map((a) => (
-                  <ArticleRow
-                    key={a.id}
-                    id={a.id}
-                    title={a.title}
-                    excerpt={a.excerpt}
-                    date={a.date}
-                    createdAt={a.createdAt}
-                    categories={a.categories}
-                    refsCount={a.refs?.length ?? 0}
-                    commentCount={commentCounts[a.id] ?? 0}
-                  />
-                ))}
+              <blockquote>“技术写作，是把一次解决问题的经验，变成很多次解决问题的起点。”</blockquote>
+              <div className="topic-list">
+                <div><Database size={17} /><span>数据平台与后端架构</span></div>
+                <div><Sparkles size={17} /><span>Agent、RAG 与 MCP</span></div>
+                <div><Braces size={17} /><span>工程工具与效率实践</span></div>
               </div>
-            ) : (
-              <p className="text-sm text-muted-foreground py-8">暂无文章</p>
-            )}
-          </main>
-        </div>
-      </div>
-
-      {/* WeChat Dialog */}
-      <Dialog open={wechatOpen} onOpenChange={setWechatOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>微信</DialogTitle></DialogHeader>
-          <div className="flex flex-col items-center py-6">
-            <img src="/wechat-qr.png" alt="微信二维码" className="w-56 h-56 object-contain" />
-            <p className="text-sm text-muted-foreground mt-4">扫码添加微信</p>
+              <div className="hero-stats">
+                <div><strong>{articles.length || "—"}</strong><span>篇文章</span></div>
+                <div><strong>{visibleCategoryCount || "—"}</strong><span>个主题</span></div>
+                <div><strong>2026</strong><span>持续更新</span></div>
+              </div>
+            </aside>
           </div>
-        </DialogContent>
-      </Dialog>
+        </section>
 
-      {/* Email Dialog */}
-      <Dialog open={emailOpen} onOpenChange={setEmailOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>邮箱</DialogTitle></DialogHeader>
-          <div className="flex flex-col items-center py-6">
-            <button
-              onClick={() => { navigator.clipboard.writeText("ywei_20@126.com"); alert("已复制"); }}
-              className="text-xl font-semibold text-foreground hover:text-primary transition-colors"
-            >
-              ywei_20@126.com
-            </button>
-            <p className="text-sm text-muted-foreground mt-3">点击复制</p>
+        <section className="container content-section">
+          <div className="section-heading">
+            <div><p>FEATURED NOTES</p><h2>最近在写</h2></div>
+            <Link href="/articles">查看全部文章 <ArrowRight size={15} /></Link>
           </div>
-        </DialogContent>
-      </Dialog>
 
+          {loading ? (
+            <div className="article-skeleton-grid" aria-label="正在加载文章"><span /><span /></div>
+          ) : featured.length > 0 ? (
+            <div className="featured-grid">
+              {featured.map((article, index) => <FeaturedArticle key={article.id} article={article} index={index} />)}
+            </div>
+          ) : (
+            <div className="empty-state">文章正在路上，稍后再来看看。</div>
+          )}
+        </section>
+
+        {recent.length > 0 && (
+          <section className="container recent-section">
+            <div className="section-heading compact"><div><p>ARCHIVE</p><h2>更多笔记</h2></div></div>
+            <div className="recent-list">
+              {recent.map((article, index) => (
+                <Link key={article.id} href={`/article/${article.id}`} className="recent-row">
+                  <span className="recent-number">{String(index + 3).padStart(2, "0")}</span>
+                  <span className="recent-title">{article.title}</span>
+                  <time>{formatDate(article.createdAt ?? article.date)}</time>
+                  <ArrowRight size={16} />
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+      </main>
       <Footer />
     </div>
   );

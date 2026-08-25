@@ -4,7 +4,7 @@
  * Manages GitHub Markdown URLs via /api/articles (server-side, persists across deployments)
  */
 
-const CACHE_KEY = "blog_articles_cache";
+const CACHE_KEY = "blog_articles_cache_v2";
 const AUTH_CACHE_KEY = "blog_authenticated";
 
 export interface AuthUser {

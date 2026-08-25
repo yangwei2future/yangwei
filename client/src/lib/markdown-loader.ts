@@ -14,20 +14,23 @@ interface GitHubMarkdown {
   excerpt?: string;
 }
 
-function toBeijingISOString(): string {
-  const now = new Date();
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Shanghai",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  }).formatToParts(now);
-  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "00";
-  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}+08:00`;
+const UNKNOWN_PUBLISHED_AT = "1970-01-01T00:00:00+08:00";
+
+/**
+ * Resolve an article date without ever depending on the time the page is opened.
+ * Config timestamps are preferred because many source Markdown files do not have
+ * frontmatter. The epoch value is only a deterministic last resort.
+ */
+export function resolvePublishedAt(frontmatterDate?: unknown, configDate?: string): string {
+  if (typeof frontmatterDate === "string") {
+    const value = frontmatterDate.trim().replace(/^['"]|['"]$/g, "");
+    if (/^\d{4}-\d{2}-\d{2}/.test(value) && !Number.isNaN(Date.parse(value))) {
+      return value.includes("T") ? value : `${value}T00:00:00+08:00`;
+    }
+  }
+
+  if (configDate && !Number.isNaN(Date.parse(configDate))) return configDate;
+  return UNKNOWN_PUBLISHED_AT;
 }
 
 /**
@@ -95,9 +98,7 @@ export async function fetchMarkdownFromGitHub(url: string, customTitle?: string,
     // Extract metadata
     const metadata: GitHubMarkdown = {
       title: customTitle || data.title || extractTitleFromContent(content) || "Untitled",
-      date: (data.date && /\d{4}-\d{2}-\d{2}/.test(data.date))
-        ? data.date + (data.date.includes("T") ? "" : "T00:00:00+08:00")
-        : (fallbackDate || toBeijingISOString()),
+      date: resolvePublishedAt(data.date, fallbackDate),
       tags: Array.isArray(data.tags) ? data.tags : [],
       author: data.author || "杨卫",
       excerpt: data.excerpt || generateExcerpt(content),
@@ -219,9 +220,11 @@ export function resolveArticleId(entry: { url: string; id?: string }): string {
  * Batch fetch multiple articles from GitHub URLs
  */
 export async function fetchArticlesFromGitHub(
-  entries: { url: string; id?: string; title?: string; createdAt?: string }[]
+  entries: { url: string; id?: string; title?: string; createdAt?: string; updatedAt?: string }[]
 ): Promise<Article[]> {
   return Promise.all(
-    entries.map((e) => fetchMarkdownFromGitHub(e.url, e.title, e.createdAt, e.id))
+    entries.map((e) =>
+      fetchMarkdownFromGitHub(e.url, e.title, e.createdAt ?? e.updatedAt, e.id)
+    )
   );
 }

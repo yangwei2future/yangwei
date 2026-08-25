@@ -9,7 +9,9 @@ import type { Article } from "./types";
  * with caching to improve performance
  */
 
-const CACHE_KEY = "blog_articles_cache";
+// Bump the cache key whenever article metadata normalization changes. This
+// invalidates dates written by the former current-time fallback in old clients.
+const CACHE_KEY = "blog_articles_cache_v2";
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 
 interface CacheData {
@@ -54,7 +56,9 @@ export function useArticles() {
             const entry = entries.find((e) => resolveArticleId(e) === article.id);
             return {
               ...article,
-              createdAt: article.createdAt,
+              // The config is the stable source of truth. Older cached articles may
+              // contain the former `now()` fallback, so always overwrite it here.
+              createdAt: entry?.createdAt ?? entry?.updatedAt ?? article.createdAt,
               updatedAt: entry?.updatedAt ?? article.updatedAt,
               categories: entry?.categories ?? article.categories,
               refs: entry?.refs,
@@ -81,7 +85,7 @@ export function useArticles() {
         const entry = entriesWithIds.find((e) => resolveArticleId(e) === article.id);
         return {
           ...article,
-          createdAt: article.createdAt,
+          createdAt: entry?.createdAt ?? entry?.updatedAt ?? article.createdAt,
           updatedAt: entry?.updatedAt,
           categories: entry?.categories,
           refs: entry?.refs,
@@ -131,7 +135,7 @@ export function useArticles() {
     const [fetched] = await fetchArticlesFromGitHub([{ ...entry, id: effectiveId }]);
     const updated = {
       ...fetched,
-      createdAt: fetched.createdAt,
+      createdAt: entry.createdAt ?? entry.updatedAt ?? fetched.createdAt,
       updatedAt: entry.updatedAt,
     };
     setArticles((prev) => {
@@ -226,7 +230,7 @@ export function preloadArticles(): void {
 
   fetch("/api/articles")
     .then((r) => r.json())
-    .then((entries: { url: string; id?: string; title?: string }[]) => {
+    .then((entries: { url: string; id?: string; title?: string; createdAt?: string; updatedAt?: string }[]) => {
       if (entries.length === 0) return;
       const entriesWithIds = entries.map((e) => ({ ...e, id: resolveArticleId(e) }));
       return fetchArticlesFromGitHub(entriesWithIds).then((articles) => {

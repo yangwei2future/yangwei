@@ -1,6 +1,6 @@
+import { ArrowUpRight, CalendarDays } from "lucide-react";
 import { Link } from "wouter";
 import { useCategories } from "@/contexts/CategoriesContext";
-import { getBadgeClass } from "@/lib/categories";
 
 interface ArticleCardProps {
   id: string;
@@ -19,61 +19,24 @@ export default function ArticleCard({
   excerpt,
   date,
   createdAt,
-  updatedAt,
   categories,
-  tags = [],
 }: ArticleCardProps) {
   const { getCategoryById } = useCategories();
-  const displayDate = createdAt ?? date;
-  const cats = (categories ?? []).map(getCategoryById).filter(Boolean) as NonNullable<ReturnType<typeof getCategoryById>>[];
+  const cats = (categories ?? []).map(getCategoryById).filter(Boolean);
+  const displayDate = new Date(createdAt ?? date);
 
   return (
-    <Link href={`/article/${id}`} className="block group">
-      <article className="p-6 bg-card rounded-lg border border-border hover:border-[oklch(0.78_0.003_286)] transition-colors duration-150">
-        {/* Date */}
-        <time className="text-sm text-muted-foreground">
-          {new Date(displayDate).toLocaleDateString("zh-CN", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </time>
-
-        {/* Title */}
-        <h3 className="mt-2 text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-          {title}
-        </h3>
-
-        {/* Categories */}
-        {cats.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-1.5">
-            {cats.map((cat) => (
-              <span key={cat.id} className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${getBadgeClass(cat.color)}`}>
-                <span>{cat.icon}</span>
-                <span>{cat.label}</span>
-              </span>
-            ))}
+    <Link href={`/article/${id}`} className="article-card group">
+      <article>
+        <div className="article-card-meta">
+          <span><CalendarDays size={14} />{displayDate.toLocaleDateString("zh-CN", { year: "numeric", month: "short", day: "numeric" })}</span>
+          <div className="article-card-categories">
+            {cats.slice(0, 2).map((cat) => cat && <span key={cat.id}>{cat.label}</span>)}
           </div>
-        )}
-
-        {/* Excerpt */}
-        <p className="mt-3 text-sm text-muted-foreground line-clamp-2">
-          {excerpt}
-        </p>
-
-        {/* Tags */}
-        {tags.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {tags.map((tag) => (
-              <span
-                key={tag}
-                className="inline-block px-2 py-1 text-xs bg-accent text-accent-foreground rounded-lg"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
+        </div>
+        <h2>{title}</h2>
+        <p>{excerpt || "一篇关于工程实践、工具与思考的技术笔记。"}</p>
+        <span className="article-card-link">阅读全文 <ArrowUpRight size={15} /></span>
       </article>
     </Link>
   );
