@@ -1,5 +1,15 @@
 [
   {
+    "url": "https://github.com/yangwei2future/yangwei/blob/main/posts/agent-memory-and-dreaming.md",
+    "id": "posts-agent-memory-and-dreaming",
+    "title": "Agent 记忆的四个问题：记什么、怎么组织、如何纠错、何时维护",
+    "createdAt": "2026-11-23T02:55:58.489Z",
+    "updatedAt": "2026-11-23T02:55:58.489Z",
+    "categories": [
+      "ai"
+    ]
+  },
+  {
     "url": "https://github.com/yangwei2future/interview/blob/main/ai-share/%E6%97%A5%E5%B8%B8%E5%AD%A6%E4%B9%A0/MCP%E4%BD%BF%E7%94%A8%E5%AE%9E%E8%B7%B5/MCP%E4%BD%BF%E7%94%A8%E5%AE%9E%E8%B7%B5.md",
     "updatedAt": "2026-04-21T03:27:43.969Z",
     "title": "MCP原理及代码拆解",
