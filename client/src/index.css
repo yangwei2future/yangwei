@@ -533,12 +533,12 @@
   .article-card:hover { transform: translateY(-4px); border-color: color-mix(in oklch, var(--primary) 55%, var(--border)); box-shadow: 0 18px 45px oklch(0.25 0.03 60 / 8%); }
   .article-card:hover h2 { color: var(--primary); }
   .archive-list { border-top: 1px solid var(--foreground); }
-  .archive-row { display: grid; grid-template-columns: 42px 1fr 90px 92px; align-items: center; gap: 20px; padding: 25px 4px; border-bottom: 1px solid var(--border); color: inherit !important; }
+  .archive-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) 90px 92px; align-items: center; gap: 20px; padding: 25px 4px; border-bottom: 1px solid var(--border); color: inherit !important; }
   .archive-index { color: var(--muted-foreground); font: italic 11px Georgia, serif; }
-  .archive-row h2 { margin: 0; font-size: 18px; font-weight: 600; }
+  .archive-row h2 { margin: 0; font-size: 18px; font-weight: 600; overflow-wrap: anywhere; }
   .archive-row p { margin-top: 5px; color: var(--muted-foreground); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .archive-category { color: var(--primary); font-size: 10px; font-weight: 700; }
-  .archive-row time { color: var(--muted-foreground); font-size: 10px; text-align: right; }
+  .archive-row time { color: var(--muted-foreground); font-size: 10px; text-align: right; font-variant-numeric: tabular-nums; }
   .archive-row:hover h2 { color: var(--primary); }
   .loading-state, .empty-state { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 220px; color: var(--muted-foreground); font-size: 13px; }
 
@@ -587,7 +587,7 @@
     .featured-card + .featured-card article { padding-left: 0; }
     .archive-count { display: none; }
     .archive-toolbar { align-items: flex-start; }
-    .archive-list .archive-row { grid-template-columns: 32px 1fr auto; }
+    .archive-row { grid-template-columns: 32px minmax(0, 1fr) 5rem; }
     .archive-row .archive-category { display: none; }
     .recent-row { grid-template-columns: 32px 1fr 16px; }
     .recent-row time { display: none; }
@@ -608,7 +608,7 @@
     .category-filters { gap: 3px; }
     .category-filters button { padding: 6px 9px; }
     .article-card article { min-height: 260px; padding: 23px; }
-    .archive-row { grid-template-columns: 28px 1fr !important; }
+    .archive-row { grid-template-columns: 28px minmax(0, 1fr); }
     .archive-row time { display: none; }
     .footer-links { flex-wrap: wrap; }
   }
