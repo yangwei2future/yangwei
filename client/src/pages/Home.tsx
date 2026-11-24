@@ -1,10 +1,10 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { ArrowRight, Braces, Database, Github, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import Footer from "@/components/Footer";
 import Navigation from "@/components/Navigation";
 import { useCategories } from "@/contexts/CategoriesContext";
-import { preloadArticles, useArticles } from "@/lib/useArticles";
+import { useArticleCatalog } from "@/lib/useArticleCatalog";
 import type { Article } from "@/lib/types";
 
 function formatDate(value: string) {
@@ -38,7 +38,7 @@ function FeaturedArticle({ article, index }: { article: Article; index: number }
 }
 
 export default function Home() {
-  const { articles, loading } = useArticles();
+  const { articles, loading } = useArticleCatalog({ enrich: true });
   const { categories } = useCategories();
   const featured = articles.slice(0, 2);
   const recent = articles.slice(2, 8);
@@ -47,7 +47,6 @@ export default function Home() {
     [articles, categories],
   );
 
-  useEffect(() => { preloadArticles(); }, []);
 
   return (
     <div className="site-page">

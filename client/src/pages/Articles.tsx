@@ -1,17 +1,24 @@
 import { useMemo, useState } from "react";
-import { AlignLeft, LayoutGrid, Loader2 } from "lucide-react";
+import { AlignLeft, CalendarDays, LayoutGrid, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import ArticleCard from "@/components/ArticleCard";
 import Footer from "@/components/Footer";
 import Navigation from "@/components/Navigation";
 import { useCategories } from "@/contexts/CategoriesContext";
-import { useArticles } from "@/lib/useArticles";
+import { useArticleCatalog } from "@/lib/useArticleCatalog";
 import type { Article } from "@/lib/types";
 
-type ViewMode = "grid" | "timeline";
+type ViewMode = "grid" | "list" | "timeline";
 
 function initialView(): ViewMode {
-  try { return (localStorage.getItem("articles_view") as ViewMode) || "grid"; }
+  try {
+    const saved = localStorage.getItem("articles_view");
+    if (saved === "timeline") return "list"; // Previous releases saved the list under this value.
+    if (saved === "list" || saved === "chronological") {
+      return saved === "list" ? "list" : "timeline";
+    }
+    return "grid";
+  }
   catch { return "grid"; }
 }
 
@@ -22,7 +29,7 @@ function formatDate(article: Article) {
 }
 
 export default function Articles() {
-  const { articles, loading, error } = useArticles();
+  const { articles, loading, error } = useArticleCatalog({ enrich: true });
   const { categories, getCategoryById } = useCategories();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(initialView);
@@ -37,9 +44,24 @@ export default function Articles() {
     [articles, selectedCategory],
   );
 
+  const groups = useMemo(() => {
+    if (viewMode !== "timeline") return [];
+    const months = new Map<string, Article[]>();
+    for (const article of filtered) {
+      const date = new Date(article.createdAt ?? article.date);
+      const month = Number.isNaN(date.getTime()) || date.getFullYear() === 1970
+        ? "日期未标注"
+        : date.toLocaleDateString("zh-CN", { year: "numeric", month: "long" });
+      const entries = months.get(month) ?? [];
+      entries.push(article);
+      months.set(month, entries);
+    }
+    return Array.from(months);
+  }, [filtered, viewMode]);
+
   const setView = (view: ViewMode) => {
     setViewMode(view);
-    try { localStorage.setItem("articles_view", view); } catch {}
+    try { localStorage.setItem("articles_view", view === "timeline" ? "chronological" : view); } catch {}
   };
 
   return (
@@ -72,8 +94,9 @@ export default function Articles() {
               ))}
             </div>
             <div className="view-toggle" aria-label="切换文章视图">
-              <button className={viewMode === "grid" ? "active" : ""} onClick={() => setView("grid")} aria-label="卡片视图"><LayoutGrid size={16} /></button>
-              <button className={viewMode === "timeline" ? "active" : ""} onClick={() => setView("timeline")} aria-label="列表视图"><AlignLeft size={16} /></button>
+              <button className={viewMode === "grid" ? "active" : ""} onClick={() => setView("grid")} aria-label="卡片视图" aria-pressed={viewMode === "grid"} title="卡片视图"><LayoutGrid size={16} /></button>
+              <button className={viewMode === "list" ? "active" : ""} onClick={() => setView("list")} aria-label="列表视图" aria-pressed={viewMode === "list"} title="列表视图"><AlignLeft size={16} /></button>
+              <button className={viewMode === "timeline" ? "active" : ""} onClick={() => setView("timeline")} aria-label="时间轴视图" aria-pressed={viewMode === "timeline"} title="时间轴视图"><CalendarDays size={16} /></button>
             </div>
           </div>
 
@@ -87,7 +110,7 @@ export default function Articles() {
             </div>
           )}
 
-          {!loading && !error && viewMode === "timeline" && (
+          {!loading && !error && viewMode === "list" && (
             <div className="archive-list">
               {filtered.map((article, index) => {
                 const category = article.categories?.map(getCategoryById).find(Boolean);
@@ -102,6 +125,26 @@ export default function Articles() {
               })}
             </div>
           )}
+          {!loading && !error && viewMode === "timeline" && groups.map(([month, entries]) => (
+            <section className="archive-month" key={month}>
+              <h2>{month}</h2>
+              <ol>
+                {entries.map((article) => {
+                  const category = article.categories?.map(getCategoryById).find(Boolean);
+                  const date = article.createdAt ?? article.date;
+                  return (
+                    <li key={article.id}>
+                      <Link href={`/article/${article.id}`} className="archive-timeline-link">
+                        {month !== "日期未标注" && <time dateTime={date}>{formatDate(article)}</time>}
+                        <h3>{article.title}</h3>
+                        {category && <span>{category.label}</span>}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ol>
+            </section>
+          ))}
         </section>
       </main>
       <Footer />

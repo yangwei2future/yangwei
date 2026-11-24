@@ -1,0 +1,125 @@
+{
+  "https://github.com/yangwei2future/yangwei/blob/main/posts/agent-verification-evidence.md": {
+    "title": "怎样验证 Agent 写出的代码：从三类测试到可核验的交付证据",
+    "excerpt": "围绕端到端测试、属性测试、差分测试和 verify skill，结合开放平台多环境转发，思考如何定义完成标准并核验 Agent 的交付结果。",
+    "tags": [
+      "Agent",
+      "Claude Code",
+      "软件测试",
+      "工程实践"
+    ],
+    "updatedAt": "2026-11-24T03:19:38.192Z"
+  },
+  "https://github.com/yangwei2future/yangwei/blob/main/posts/agent-memory-and-dreaming.md": {
+    "title": "Agent 记忆的四个问题：记什么、怎么组织、如何纠错、何时维护",
+    "excerpt": "从 Anthropic 的实验出发，梳理 Agent 记忆的筛选、组织、纠错与维护，以及收益和成本如何评估。",
+    "tags": [
+      "Agent",
+      "记忆",
+      "Dreaming"
+    ],
+    "updatedAt": "2026-11-23T02:55:58.489Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/src/embodied-ai/miniconda-install-guide.md": {
+    "title": "macOS Miniconda 安装与配置完整指南",
+    "excerpt": "macOS Miniconda 安装与配置完整指南\n\n> 适用于 macOS（Apple Silicon / Intel），涵盖安装、镜像源配置、环境管理全流程。\n\nAnaconda vs Miniconda，选哪个？\n\n\n\n\n\n\n\n\n结论：选 Miniconda。装完按需 conda instal...",
+    "tags": [],
+    "updatedAt": "2026-06-08T12:53:59.994Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/src/interview-records/aksk-signature.md": {
+    "title": "API 网关 AK/SK 签名认证原理",
+    "excerpt": "API 网关 AK/SK 签名认证原理\n\n> 基于项目 dip-open-platform-api-gateway 实际实现（SignUtil.java）\n> 签名协议：HMAC-SHA256，参考阿里云 ACS3 规范\n\n---\n\n一、先搞懂 HMAC 的输入和输出\n\n在开始看整个签名流程之前，先...",
+    "tags": [],
+    "updatedAt": "2026-05-25T09:52:47.435Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/docs/%E6%85%A2SQL%E6%8E%92%E6%9F%A5%E5%AE%9E%E6%88%98_davinci_statistic_visitor_operation.md": {
+    "title": "线上慢 SQL 排查实战",
+    "excerpt": "线上慢 SQL 排查实战\n\n背景\n\n线上监控发现一条慢 SQL，扫描行数接近 2000 万，需要定位问题并优化。\n\n慢 SQL 原文\n\nsql\nSELECT\n    name,\n    COUNT(id) AS COUNT(id)\nFROM\n    (\n        SELECT\n        ...",
+    "tags": [],
+    "updatedAt": "2026-05-19T09:20:21.064Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/src/concurrent/locks/README.md": {
+    "title": "synchronized 锁升级",
+    "excerpt": "synchronized 锁升级\n\n核心：Java 对象头（Mark Word）\n\n每个 Java 对象在堆中都有一个对象头，64 位 JVM 下 Mark Word 占 8 字节，记录了锁状态信息：\n\n\n\n\n\n\n\n\n\n\n\n\n\n后两位是锁标志位，是判断锁状态的关键。\n\n---\n\n四种锁状态及升级过程...",
+    "tags": [],
+    "updatedAt": "2026-05-16T03:24:42.483Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/docs/gateway-learning-notes.md": {
+    "title": "Spring Cloud Gateway — 从原理到实践",
+    "excerpt": "Spring Cloud Gateway — 从原理到实践\n\n零、网关基础概念\n\nSpring Cloud Gateway 是 Spring 生态的 API 网关，基于 WebFlux + Netty（非阻塞 I/O），不依赖 Tomcat。三个核心概念：\n\n\n请求 → Gateway → 后端服务...",
+    "tags": [],
+    "updatedAt": "2026-05-14T15:39:38.258Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/src/jvm/jvm.md": {
+    "title": "JVM 核心知识",
+    "excerpt": "JVM 核心知识\n\n知识地图\n\n\n1. 内存结构        → 各区域作用、OOM 场景\n2. 对象创建 & 布局 → new 的过程、对象头\n3. GC 垃圾回收     → 可达性分析、GC 算法、分代模型\n4. GC 收集器       → gc-collectors.md（Serial/...",
+    "tags": [],
+    "updatedAt": "2026-04-28T16:14:58.414Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/src/kafka/kafka-review.md": {
+    "title": "Kafka 核心知识点",
+    "excerpt": "Kafka 核心知识点\n\n> 本文按照\"背景 → 原理 → 案例 → 关键结论\"组织。\n> 随学习进度持续更新。\n\n---\n\n一、为什么用 Kafka\n\n没有 MQ 时，服务间直接同步调用有三个核心问题：\n\n\n耦合：下单服务依赖N个下游，任何一个挂了影响下单\n慢：  串行等待所有步骤完成，用户响应慢...",
+    "tags": [],
+    "updatedAt": "2026-04-26T03:46:00.379Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/src/spring/spring-review.md": {
+    "title": "Spring 核心知识点",
+    "excerpt": "Spring 核心知识点\n\n> 本文按照\"背景 → 原理 → 案例 → 关键结论\"组织。\n> 随学习进度持续更新。\n\n---\n\n一、IOC 和 DI\n\nIOC（控制反转）\n\n背景： 没有 IOC 时，对象依赖需要自己 new，改一处牵连所有用到它的地方。\n\nIOC = 把对象的创建和管理权交给 Sp...",
+    "tags": [],
+    "updatedAt": "2026-04-25T07:18:20.742Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/ai-share/%E9%A3%9E%E4%B9%A6CLI%20%E5%BF%AB%E9%80%9F%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE/%E9%A3%9E%E4%B9%A6CLI%20%E5%BF%AB%E9%80%9F%E5%AE%89%E8%A3%85%E4%B8%8E%E9%85%8D%E7%BD%AE.md": {
+    "title": "飞书CLI 快速安装与配置",
+    "excerpt": "飞书CLI 快速安装与配置\n\n环境要求\n\n- Node.js 16.0 及以上版本\n- npm 或 yarn\n\n安装步骤\n\n第一步：安装 lark-cli\n\n将以下命令发送给 AI Agent 工具（如 Trae、Cursor、Codex、Claude code）：\n\nbash\nnpm instal...",
+    "tags": [],
+    "updatedAt": "2026-04-22T13:44:58.824Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/src/database/mysql-lock.md": {
+    "title": "MySQL 锁机制",
+    "excerpt": "MySQL 锁机制\n\n一、为什么需要锁？\n\n并发场景下，多个事务同时操作同一数据会产生问题。\n\n典型场景：超卖\n> 库存只剩1件，事务A和事务B同时读到库存=1，都认为可以卖，都执行扣减，库存变-1。\n\n锁的作用：让并发操作串行化，保证数据一致性。\n\n---\n\n锁的分层防护（实际生产）\n\n\n高并发请...",
+    "tags": [],
+    "updatedAt": "2026-04-22T14:47:56.240Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/ai-share/%E6%97%A5%E5%B8%B8%E5%AD%A6%E4%B9%A0/%E7%AC%AC%E5%8D%81%E7%AB%A0%EF%BC%9A%E6%A8%A1%E5%9E%8B%E4%B8%8A%E4%B8%8B%E6%96%87%E5%8D%8F%E8%AE%AE%EF%BC%88MCP%EF%BC%89/MCP%E5%85%A8%E6%99%AF%EF%BC%9A%E4%BB%8E%E5%8D%8F%E8%AE%AE%E5%8E%9F%E7%90%86%E5%88%B0%E4%BC%81%E4%B8%9A%E7%BA%A7%E8%90%BD%E5%9C%B0.md": {
+    "title": "MCP 全景：从协议原理到企业级落地",
+    "excerpt": "MCP 全景：从协议原理到企业级落地\n\n> 本文整合 MCP 协议背景、实践接入与企业级架构三个维度，提供从\"Why\"到\"How\"到\"Production\"的完整视角。\n\n---\n\n一、为什么需要 MCP？\n\n对话能力的三个阶段\n\n\n\n\n\n\n\nMCP 的核心价值：解耦工具和模型。工具变更或升级，模型...",
+    "tags": [],
+    "updatedAt": "2026-04-21T03:27:21.390Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/src/database/mysql-index.md": {
+    "title": "MySQL 索引原理",
+    "excerpt": "MySQL 索引原理\n\n一、为什么需要索引？\n\n业务量小的时候，数据库全表扫描速度感知不明显，建不建索引差别不大。\n\n随着业务增长，数据到了千万级，用户根据某个字段查询数据，没有索引的情况下全表扫描极慢，直接影响用户体验。业务不关心你的技术实现，只关心\"为什么搜个东西这么久\"。\n\n索引的本质：给数据...",
+    "tags": [],
+    "updatedAt": "2026-04-19T13:06:26.023Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/src/database/redis.md": {
+    "title": "Redis 核心知识",
+    "excerpt": "Redis 核心知识\n\n知识地图\n\n\n1. 数据结构        → 5种基本类型\n2. 持久化          → RDB / AOF / 混合模式\n3. 过期 & 淘汰     → 键过期策略 + 内存淘汰策略\n4. 典型场景        → 缓存穿透/击穿/雪崩\n5. 分布式锁     ...",
+    "tags": [],
+    "updatedAt": "2026-04-18T03:15:34.928Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/ai-share/%E6%97%A5%E5%B8%B8%E5%AD%A6%E4%B9%A0/Agent%20Skills%20%E4%BD%BF%E7%94%A8%E5%AE%9E%E8%B7%B5/Agent%20Skills%20%E4%BD%BF%E7%94%A8%E5%AE%9E%E8%B7%B5.md": {
+    "title": "Agent Skills 使用实践",
+    "excerpt": "预期收益：\n\n> - 理解 Agent Skills 解决的核心问题：模型很聪明，但输出不稳定；\n> - 掌握 Agent Skills 的标准化定义与规范；\n> - 学会在实际项目中配置和使用 Skills；\n\n一、Why Agent Skills\n\n常见问题\n\n如果你最近在折腾 AI Agent...",
+    "tags": [],
+    "updatedAt": "2026-04-15T14:49:42.432Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/src/concurrent/threadpool/README.md": {
+    "title": "线程池（ThreadPool）完整笔记",
+    "excerpt": "线程池（ThreadPool）完整笔记\n\n一、七个核心参数\n\njava\nnew ThreadPoolExecutor(\n    int corePoolSize,           // 核心线程数（常驻，即使空闲）\n    int maximumPoolSize,        // 最大线程数...",
+    "tags": [],
+    "updatedAt": "2026-04-15T16:02:09.819Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/ai-share/Conda%E5%90%88%E8%A7%84%E9%85%8D%E7%BD%AE%E5%AE%89%E8%A3%85.md": {
+    "title": "Conda合规配置安装",
+    "excerpt": "摘要\n由于商业等系列原因，公司内不允许使用Anaconda、minConda等商用环境管理工具，如果使用python虚拟环境管理，通常每个项目下都有一个虚拟环境，但其实很多项目的依赖相差不大，完全可复用，无形提高了大家的环境管理了成本。因此，通过调研后，可采纳安装Miniforge无缝回到原来的Co...",
+    "tags": [],
+    "updatedAt": "2026-04-19T14:58:22.380Z"
+  },
+  "https://github.com/yangwei2future/interview/blob/main/ai-share/%E6%97%A5%E5%B8%B8%E5%AD%A6%E4%B9%A0/Whistle%E8%AF%B7%E6%B1%82%E6%98%A0%E5%B0%84/Whistle%E5%AE%9E%E7%8E%B0%E6%B5%8F%E8%A7%88%E5%99%A8%E8%AF%B7%E6%B1%82%E6%98%A0%E5%B0%84%E5%88%B0%E6%9C%AC%E5%9C%B0%E6%9C%8D%E5%8A%A1.md": {
+    "title": "Whistle实现浏览器请求映射到本地服务",
+    "excerpt": "痛点场景\n\ntest环境调试过程，你是不是每次都将对应的curl请求复制到Postman中，然后修改域名至本地进行逐接口调试。验证完成之后，再把代码发到test环境进行验证。此过程费时费力！！！\n\n是否有一种办法，可以直接把网页的请求，映射到本地新起的服务，然后进行调试呢。答案显然是可以的。\n\n原理...",
+    "tags": [],
+    "updatedAt": "2026-04-19T14:58:46.057Z"
+  }
+}

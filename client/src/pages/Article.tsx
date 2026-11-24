@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import Navigation from "@/components/Navigation";
 import TableOfContents, { slugifyHeading, extractTextFromChildren } from "@/components/TableOfContents";
 import Comments from "@/components/Comments";
-import { useArticles } from "@/lib/useArticles";
+import { loadCatalogArticle, useArticleCatalog } from "@/lib/useArticleCatalog";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -12,7 +12,7 @@ import "highlight.js/styles/github.css";
 import { ArrowLeft, X, Copy, Check, Lock, BookMarked } from "lucide-react";
 import { useState, useEffect } from "react";
 import type { ComponentPropsWithoutRef, ReactElement } from "react";
-import { fetchArticlesFromGitHub, resolveArticleId } from "@/lib/markdown-loader";
+import { resolveArticleId } from "@/lib/markdown-loader";
 import type { Article as ArticleType } from "@/lib/types";
 
 function makeHeading(Tag: "h1" | "h2" | "h3" | "h4" | "h5" | "h6") {
@@ -73,10 +73,14 @@ const headingComponents = {
 
 export default function Article() {
   const { id } = useParams<{ id: string }>();
-  const { articles, allLinks, loading } = useArticles();
+  const { articles, allLinks, loading, error } = useArticleCatalog();
+  const link = allLinks.find((entry) => resolveArticleId(entry) === id);
   const [zoomedSrc, setZoomedSrc] = useState<string | null>(null);
-  const [hiddenArticle, setHiddenArticle] = useState<ArticleType | null>(null);
-  const [hiddenLoading, setHiddenLoading] = useState(false);
+  const [result, setResult] = useState<{
+    entry: typeof link;
+    article?: ArticleType;
+    failed?: boolean;
+  }>();
 
   useEffect(() => {
     if (!zoomedSrc) return;
@@ -85,26 +89,14 @@ export default function Article() {
     return () => window.removeEventListener("keydown", onKey);
   }, [zoomedSrc]);
 
-  // Load hidden article if not found in public list
   useEffect(() => {
-    if (loading || !id) return;
-    if (articles.find((a) => a.id === id)) return;
-    const link = allLinks.find(
-      (l) => l.hidden && resolveArticleId(l) === id
-    );
     if (!link) return;
-    setHiddenLoading(true);
-    fetchArticlesFromGitHub([link])
-      .then(([fetched]) => {
-        if (fetched) setHiddenArticle({
-          ...fetched,
-          createdAt: link.createdAt ?? fetched.createdAt,
-          refs: link.refs,
-          hidden: true,
-        });
-      })
-      .finally(() => setHiddenLoading(false));
-  }, [id, loading, articles, allLinks]);
+    let active = true;
+    loadCatalogArticle(link)
+      .then((article) => { if (active) setResult({ entry: link, article }); })
+      .catch(() => { if (active) setResult({ entry: link, failed: true }); });
+    return () => { active = false; };
+  }, [link]);
 
   const markdownComponents = {
     ...headingComponents,
@@ -114,6 +106,8 @@ export default function Article() {
         <img
           src={src}
           alt={alt}
+          loading="lazy"
+          decoding="async"
           onClick={() => src && setZoomedSrc(src)}
           className="cursor-zoom-in rounded max-w-full"
         />
@@ -121,14 +115,14 @@ export default function Article() {
     },
     video({ src, children, ...props }: ComponentPropsWithoutRef<"video">) {
       return (
-        <video controls className="w-full rounded" src={src} {...props}>
+        <video controls preload="metadata" className="w-full rounded" src={src} {...props}>
           {children}
         </video>
       );
     },
   };
 
-  if (loading || hiddenLoading) {
+  if (loading || (link && result?.entry !== link)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p className="text-muted-foreground">加载中...</p>
@@ -136,14 +130,14 @@ export default function Article() {
     );
   }
 
-  const article = articles.find((a) => a.id === id) ?? hiddenArticle;
+  const article = result?.entry === link ? result?.article : undefined;
 
   if (!article) {
     return (
       <div className="min-h-screen bg-background pb-10">
         <Navigation />
         <div className="container py-20 text-center">
-          <h1 className="text-2xl font-bold text-foreground">文章未找到</h1>
+          <h1 className="text-2xl font-bold text-foreground">{error || result?.failed ? "文章加载失败" : "文章未找到"}</h1>
           <Link href="/articles" className="mt-4 inline-block text-primary hover:text-primary/80">
             返回文章列表
           </Link>
@@ -152,12 +146,13 @@ export default function Article() {
     );
   }
 
-  // Get related articles (same tags)
+  // Prefer matching tags, with category matches as a fallback.
   const relatedArticles = articles
     .filter(
       (a) =>
         a.id !== article.id &&
-        a.tags.some((tag) => article.tags.includes(tag))
+        (a.tags.some((tag) => article.tags.includes(tag)) ||
+          a.categories?.some((category) => article.categories?.includes(category)))
     )
     .slice(0, 3);
 

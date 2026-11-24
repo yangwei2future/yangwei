@@ -221,26 +221,6 @@ export function useArticles() {
 }
 
 /**
- * Preload articles (for use in Home page)
- * This will trigger article loading in background
- */
-export function preloadArticles(): void {
-  const cached = getCachedArticles();
-  if (cached) return;
-
-  fetch("/api/articles")
-    .then((r) => r.json())
-    .then((entries: { url: string; id?: string; title?: string; createdAt?: string; updatedAt?: string }[]) => {
-      if (entries.length === 0) return;
-      const entriesWithIds = entries.map((e) => ({ ...e, id: resolveArticleId(e) }));
-      return fetchArticlesFromGitHub(entriesWithIds).then((articles) => {
-        cacheArticles(articles);
-      });
-    })
-    .catch((err) => console.error("Error preloading articles:", err));
-}
-
-/**
  * Get cached articles if still valid
  */
 function getCachedArticles(): Article[] | null {

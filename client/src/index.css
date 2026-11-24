@@ -613,3 +613,25 @@
     .footer-links { flex-wrap: wrap; }
   }
 }
+
+@layer components {
+  .archive-month { margin-bottom: 2rem; }
+  .archive-month > h2 { margin-bottom: .9rem; font-size: 1.25rem; font-weight: 650; }
+  .archive-month ol { margin-left: .35rem; padding-left: 1.25rem; border-left: 1px solid var(--border); }
+  .archive-month li { position: relative; }
+  .archive-month li::before {
+    content: "";
+    position: absolute;
+    left: calc(-1.25rem - 4px);
+    top: 1.25rem;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--primary);
+  }
+  .archive-timeline-link { display: flex; align-items: baseline; flex-wrap: wrap; gap: .35rem 1rem; padding: .75rem 0; color: inherit !important; }
+  .archive-timeline-link h3 { font-size: 1rem; font-weight: 600; overflow-wrap: anywhere; }
+  .archive-timeline-link:hover h3 { color: var(--primary); }
+  .archive-timeline-link time { min-width: 6rem; color: var(--muted-foreground); font-size: .8rem; font-variant-numeric: tabular-nums; }
+  .archive-timeline-link span { color: var(--primary); font-size: .8rem; }
+}
