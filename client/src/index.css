@@ -550,10 +550,10 @@
   .footer-links a { display: flex; color: var(--muted-foreground); }
   .footer-links a:hover { color: var(--foreground); }
 
-  .article-hero { padding: 66px 0 52px; border-bottom: 1px solid var(--border); }
+  .article-hero { padding: 48px 0 36px; border-bottom: 1px solid var(--border); }
   .article-shell { max-width: 820px; }
-  .article-hero > .article-shell > a { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 34px; color: var(--muted-foreground); font-size: 11px; }
-  .article-title { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; max-width: 760px; margin: 14px 0 0; font-size: clamp(2.4rem, 6vw, 4.6rem); font-weight: 600; line-height: 1.15; letter-spacing: -.055em; }
+  .article-hero > .article-shell > a { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 24px; color: var(--muted-foreground); font-size: 11px; }
+  .article-title { display: block; max-width: none; margin: 12px 0 0; font-size: clamp(1.75rem, 3vw, 2.75rem); font-weight: 600; line-height: 1.35; letter-spacing: -.025em; text-wrap: pretty; overflow-wrap: anywhere; }
   .article-byline { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; margin-top: 28px; color: var(--muted-foreground); font-size: 11px; }
   .article-body-section { padding: 52px 0 90px; }
   .article-prose { font-family: "Avenir Next", "PingFang SC", system-ui, sans-serif; font-size: 16px; line-height: 1.9; }
