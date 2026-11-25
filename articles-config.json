@@ -1,5 +1,17 @@
 [
   {
+    "url": "https://raw.githubusercontent.com/yangwei2future/yangwei/refs/heads/main/posts/lance-multimodal-data-pipeline.md",
+    "id": "posts-lance-multimodal-data-pipeline",
+    "title": "从文件目录到数据表：基于 Lance 构建可探查、可复用的多模态数据流水线",
+    "createdAt": "2026-11-25T01:20:23.886Z",
+    "updatedAt": "2026-11-25T01:20:23.886Z",
+    "categories": [
+      "ai",
+      "architecture",
+      "cat-mo5w0jm5"
+    ]
+  },
+  {
     "url": "https://raw.githubusercontent.com/yangwei2future/yangwei/refs/heads/main/posts/agent-verification-evidence.md",
     "id": "posts-agent-verification-evidence",
     "title": "怎样验证 Agent 写出的代码：从三类测试到可核验的交付证据",
